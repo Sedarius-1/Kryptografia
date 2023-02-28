@@ -4,9 +4,31 @@
     <groupId>org.krypto</groupId>
     <artifactId>krypto</artifactId>
     <packaging>jar</packaging>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.1</version>
     <name>demo</name>
     <url>http://maven.apache.org</url>
+
+    <licenses>
+        <license>
+            <name>GPL License</name>
+            <url>${basedir}/license.txt</url>
+            <distribution>repo</distribution>
+            <comments>GNU GENERAL PUBLIC LICENSE</comments>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>242432</id>
+            <name>Tomasz Kowalczyk</name>
+            <email>242432@edu.p.lodz.pl</email>
+        </developer>
+        <developer>
+            <id>242413</id>
+            <name>Jakub Kalinowski</name>
+            <email>242413@edu.p.lodz.pl</email>
+        </developer>
+    </developers>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
