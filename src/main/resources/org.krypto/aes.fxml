@@ -42,8 +42,8 @@
       <menus>
         <Menu mnemonicParsing="false" text="Mode">
           <items>
-            <MenuItem mnemonicParsing="false" text="AES encryption" />
-            <MenuItem mnemonicParsing="false" text="DSA sign" />
+            <MenuItem disable="true" mnemonicParsing="false" text="AES encryption" />
+            <MenuItem fx:id="goto_des" mnemonicParsing="false" onAction="#handleButtonPress" text="DSA sign" />
             <MenuItem mnemonicParsing="false" text="Quit" />
           </items>
         </Menu>
@@ -56,7 +56,7 @@
     </MenuBar>
     <AnchorPane maxHeight="-1.0" maxWidth="-1.0" prefHeight="573.0" prefWidth="640.0" VBox.vgrow="ALWAYS">
       <children>
-        <Label alignment="CENTER" layoutX="155.0" layoutY="177.0" style="&#10;" text="Drag components from Library here…" textAlignment="CENTER" textFill="#9f9f9f" wrapText="false">
+        <Label alignment="CENTER" layoutX="160.0" layoutY="14.0" style="&#10;" text="AES" textAlignment="CENTER" textFill="#9f9f9f" wrapText="false">
           <font>
             <Font size="18.0" />
           </font>

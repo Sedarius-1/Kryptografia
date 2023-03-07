@@ -7,10 +7,12 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 
-public class HelloApplication extends Application {
+public class KryptoApplication extends Application {
     @Override
     public void start(Stage stage) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("/org.krypto/aes.fxml"));
+        KryptoController controller = new KryptoController();
+        FXMLLoader fxmlLoader = new FXMLLoader(KryptoApplication.class.getResource("/org.krypto/aes.fxml"));
+        fxmlLoader.setController(controller);
         Scene scene = new Scene(fxmlLoader.load(), 640, 400);
         stage.setTitle("Hello!");
         stage.setScene(scene);
