@@ -36,14 +36,14 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<VBox prefHeight="400.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1">
+<VBox prefHeight="400.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.krypto.KryptoController">
   <children>
     <MenuBar VBox.vgrow="NEVER">
       <menus>
         <Menu mnemonicParsing="false" text="Mode">
           <items>
-            <MenuItem mnemonicParsing="false" text="AES encryption" />
-            <MenuItem mnemonicParsing="false" text="DSA sign" />
+            <MenuItem mnemonicParsing="false" onAction="#switchToAES" text="AES encryption" />
+            <MenuItem disable="true" mnemonicParsing="false" text="DSA sign" />
             <MenuItem mnemonicParsing="false" text="Quit" />
           </items>
         </Menu>
