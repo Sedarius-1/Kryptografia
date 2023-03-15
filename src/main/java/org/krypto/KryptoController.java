@@ -3,23 +3,38 @@ package org.krypto;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.stage.Stage;
+import org.apache.commons.io.FilenameUtils;
 
+import javax.swing.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.security.SecureRandom;
+import java.util.Arrays;
+import java.util.concurrent.ThreadLocalRandom;
 
 
 public class KryptoController {
+
+    @FXML
+    private Button klucz_odczyt_button;
+
     @FXML
     private MenuItem goto_des;
 
     @FXML
     private TextField klucz_text_field;
+
+    @FXML
+    private Button klucz_text_button;
+
+    @FXML
+    private Button klucz_zapis_button;
     private Stage stage;
     private Scene scene;
 
@@ -39,11 +54,73 @@ public class KryptoController {
         stage.show();
     }
 
-    public void createRandomValue(ActionEvent event){
-        String s = "gwagawgawgawgawugwqgbnewigwgnwiew gjwe phiwe hpwehp";
-        klucz_text_field = new TextField();
-        klucz_text_field.setText(s);
+    public void createRandomValue(){
+        klucz_text_button.setOnAction(ActionEvent-> {
+            byte[] secureRandomKeyBytes = new byte[256/8];
+            SecureRandom secureRandom = new SecureRandom();
+            secureRandom.nextBytes(secureRandomKeyBytes);
+            StringBuilder key_string = new StringBuilder();
+            for(int i=0;i<256/8;i++){
+                key_string.append((char)secureRandomKeyBytes[i]);
+            }
+            klucz_text_field.setText(key_string.toString());
+        });
 
+    }
+
+    public void saveKeyToFile(){
+        klucz_zapis_button.setOnAction(ActionEvent ->{
+            JFrame parentFrame = new JFrame();
+
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Specify a file to save");
+
+            int userSelection = fileChooser.showSaveDialog(parentFrame);
+
+            if (userSelection == JFileChooser.APPROVE_OPTION) {
+                File fileToSave = fileChooser.getSelectedFile();
+                if (FilenameUtils.getExtension(fileToSave.getName()).equalsIgnoreCase("aeskey")) {
+                } else {
+                    fileToSave = new File(fileToSave + ".aeskey");
+                    fileToSave = new File(fileToSave.getParentFile(), FilenameUtils.getBaseName(fileToSave.getName())+".aeskey");
+                }
+                String str = klucz_text_field.getText();
+                try {
+                    BufferedWriter writer = new BufferedWriter(new FileWriter(fileToSave.getAbsolutePath()));
+                    writer.write(str);
+                    writer.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                System.out.println("Save as file: " + fileToSave.getAbsolutePath());
+            }
+        });
+    }
+
+    public void loadKeyFromFile(){
+        klucz_odczyt_button.setOnAction(ActionEvent -> {
+            Alert a = new Alert(Alert.AlertType.ERROR, "TO NIE JEST PLIK KLUCZA! (.aeskey)", ButtonType.APPLY);
+            JFrame parentFrame = new JFrame();
+
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Specify a file to load");
+
+            int userSelection = fileChooser.showOpenDialog(parentFrame);
+            if(userSelection == JFileChooser.APPROVE_OPTION){
+                File selectedFile = fileChooser.getSelectedFile();
+                if (FilenameUtils.getExtension(selectedFile.getName()).equalsIgnoreCase("aeskey")){
+                    try {
+                        java.awt.Desktop.getDesktop().open(selectedFile);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                else{
+                    a.setAlertType(Alert.AlertType.ERROR);
+                    a.show();
+                }
+            }
+        });
     }
 
 
