@@ -10,12 +10,12 @@ import javafx.stage.Stage;
 import org.apache.commons.io.FilenameUtils;
 
 import javax.swing.*;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.math.BigInteger;
+import java.nio.file.Files;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.HexFormat;
 import java.util.concurrent.ThreadLocalRandom;
 
 
@@ -59,11 +59,8 @@ public class KryptoController {
             byte[] secureRandomKeyBytes = new byte[256/8];
             SecureRandom secureRandom = new SecureRandom();
             secureRandom.nextBytes(secureRandomKeyBytes);
-            StringBuilder key_string = new StringBuilder();
-            for(int i=0;i<256/8;i++){
-                key_string.append((char)secureRandomKeyBytes[i]);
-            }
-            klucz_text_field.setText(key_string.toString());
+            HexFormat hex = HexFormat.of();
+            klucz_text_field.setText(hex.formatHex(secureRandomKeyBytes));
         });
 
     }
@@ -84,11 +81,15 @@ public class KryptoController {
                     fileToSave = new File(fileToSave + ".aeskey");
                     fileToSave = new File(fileToSave.getParentFile(), FilenameUtils.getBaseName(fileToSave.getName())+".aeskey");
                 }
-                String str = klucz_text_field.getText();
+                 byte[] key_bytes = HexFormat.of().parseHex(klucz_text_field.getText());
+
                 try {
-                    BufferedWriter writer = new BufferedWriter(new FileWriter(fileToSave.getAbsolutePath()));
-                    writer.write(str);
-                    writer.close();
+                    try (FileOutputStream outputStream = new FileOutputStream(fileToSave)) {
+                        outputStream.write(key_bytes);
+                    }
+//                    BufferedWriter writer = new BufferedWriter(new FileWriter(fileToSave.getAbsolutePath()));
+//                    writer.write(key_bytes);
+//                    writer.close();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -110,7 +111,10 @@ public class KryptoController {
                 File selectedFile = fileChooser.getSelectedFile();
                 if (FilenameUtils.getExtension(selectedFile.getName()).equalsIgnoreCase("aeskey")){
                     try {
-                        java.awt.Desktop.getDesktop().open(selectedFile);
+                        byte[] readData = Files.readAllBytes(selectedFile.toPath());
+                        HexFormat hex = HexFormat.of();
+                        klucz_text_field.setText(hex.formatHex(readData));
+
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }

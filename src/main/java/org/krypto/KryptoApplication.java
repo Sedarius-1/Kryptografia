@@ -17,7 +17,7 @@ public class KryptoApplication extends Application {
             Parent root = FXMLLoader.load(KryptoApplication.class.getResource("/org.krypto/aes.fxml"));
             Scene scene = new Scene(root);
             stage.setScene(scene);
-            stage.setTitle("NAPRAWIONE");
+            stage.setTitle("Krypto");
             stage.show();
 
         } catch(Exception e) {
