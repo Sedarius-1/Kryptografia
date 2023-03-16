@@ -51,7 +51,7 @@
         </Menu>
         <Menu mnemonicParsing="false" text="Help">
           <items>
-            <MenuItem mnemonicParsing="false" text="About" />
+            <MenuItem mnemonicParsing="false" onAction="#about" text="About" />
           </items>
         </Menu>
       </menus>
@@ -63,7 +63,7 @@
             <Font size="25.0" />
           </font>
         </Label>
-            <TextField fx:id="klucz_text_field" layoutX="290.0" layoutY="104.0" prefHeight="31.0" prefWidth="527.0" promptText="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" />
+            <TextField fx:id="key_text_field" layoutX="290.0" layoutY="104.0" prefHeight="31.0" prefWidth="527.0" promptText="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" />
             <Button fx:id="klucz_text_button" layoutX="171.0" layoutY="64.0" maxHeight="-Infinity" maxWidth="-Infinity" mnemonicParsing="false" onAction="#createRandomValue" prefHeight="100.0" prefWidth="100.0" text="Generate new key" textAlignment="CENTER" textOverrun="CLIP" wrapText="true" />
             <Button layoutX="403.0" layoutY="378.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="150.0" text="&lt;--- DECRYPT ---" />
             <Label layoutX="14.0" layoutY="39.0" text="Key" AnchorPane.leftAnchor="20.0" AnchorPane.topAnchor="40.0">

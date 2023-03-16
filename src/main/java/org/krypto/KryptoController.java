@@ -11,12 +11,9 @@ import org.apache.commons.io.FilenameUtils;
 
 import javax.swing.*;
 import java.io.*;
-import java.math.BigInteger;
 import java.nio.file.Files;
 import java.security.SecureRandom;
-import java.util.Arrays;
 import java.util.HexFormat;
-import java.util.concurrent.ThreadLocalRandom;
 
 
 public class KryptoController {
@@ -25,10 +22,7 @@ public class KryptoController {
     private Button klucz_odczyt_button;
 
     @FXML
-    private MenuItem goto_des;
-
-    @FXML
-    private TextField klucz_text_field;
+    private TextField key_text_field;
 
     @FXML
     private Button klucz_text_button;
@@ -39,6 +33,7 @@ public class KryptoController {
     private Scene scene;
 
     public void switchToAES(ActionEvent event) throws IOException {
+        // TODO: fix "might be null warning"
         Parent root = FXMLLoader.load(KryptoApplication.class.getResource("/org.krypto/aes.fxml"));
         stage =(Stage)((MenuItem)event.getSource()).getParentPopup().getOwnerWindow().getScene().getWindow();
         scene = new Scene(root);
@@ -47,6 +42,7 @@ public class KryptoController {
     }
 
     public void switchToDSA(ActionEvent event) throws IOException {
+        // TODO: fix "might be null warning"
         Parent root = FXMLLoader.load(KryptoApplication.class.getResource("/org.krypto/dsa.fxml"));
         stage =(Stage)((MenuItem)event.getSource()).getParentPopup().getOwnerWindow().getScene().getWindow();
         scene = new Scene(root);
@@ -54,13 +50,22 @@ public class KryptoController {
         stage.show();
     }
 
+    public void about(ActionEvent event) {
+        String about_message = "App made as a university assignment by Jakub Kalinowski and Tomasz Kowalczyk";
+        Alert a = new Alert(Alert.AlertType.INFORMATION, about_message, ButtonType.OK);
+        a.setTitle("About");
+        a.show();
+    }
+
+    // TODO: add "Quit" button handling
+
     public void createRandomValue(){
         klucz_text_button.setOnAction(ActionEvent-> {
             byte[] secureRandomKeyBytes = new byte[256/8];
             SecureRandom secureRandom = new SecureRandom();
             secureRandom.nextBytes(secureRandomKeyBytes);
             HexFormat hex = HexFormat.of();
-            klucz_text_field.setText(hex.formatHex(secureRandomKeyBytes));
+            key_text_field.setText(hex.formatHex(secureRandomKeyBytes));
         });
 
     }
@@ -76,20 +81,18 @@ public class KryptoController {
 
             if (userSelection == JFileChooser.APPROVE_OPTION) {
                 File fileToSave = fileChooser.getSelectedFile();
+                // TODO: co to kurwa jest?
                 if (FilenameUtils.getExtension(fileToSave.getName()).equalsIgnoreCase("aeskey")) {
                 } else {
                     fileToSave = new File(fileToSave + ".aeskey");
                     fileToSave = new File(fileToSave.getParentFile(), FilenameUtils.getBaseName(fileToSave.getName())+".aeskey");
                 }
-                 byte[] key_bytes = HexFormat.of().parseHex(klucz_text_field.getText());
+                 byte[] key_bytes = HexFormat.of().parseHex(key_text_field.getText());
 
                 try {
                     try (FileOutputStream outputStream = new FileOutputStream(fileToSave)) {
                         outputStream.write(key_bytes);
                     }
-//                    BufferedWriter writer = new BufferedWriter(new FileWriter(fileToSave.getAbsolutePath()));
-//                    writer.write(key_bytes);
-//                    writer.close();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -113,7 +116,7 @@ public class KryptoController {
                     try {
                         byte[] readData = Files.readAllBytes(selectedFile.toPath());
                         HexFormat hex = HexFormat.of();
-                        klucz_text_field.setText(hex.formatHex(readData));
+                        key_text_field.setText(hex.formatHex(readData));
 
                     } catch (IOException e) {
                         throw new RuntimeException(e);
@@ -129,29 +132,3 @@ public class KryptoController {
 
 
 }
-
-//    public void handleButtonPress(ActionEvent event) {
-//        Stage stage;
-//        Parent root;
-//
-//        if(event.getSource()==goto_des){
-//            stage = (Stage) (((MenuItem)event.getTarget()).getParentPopup().getScene().getWindow());
-//            try{
-//                root = FXMLLoader.load(KryptoApplication.class.getResource("/org.krypto/dsa.fxml"));
-//                Scene scene = new Scene(root);
-//                stage.setScene(scene);
-//                stage.show();
-//            }catch (Exception e){
-//                System.out.print(e.toString());
-//            }
-//        }
-//    }
-//    /*
-//    @FXML
-//    private Label welcomeText;
-//
-//    @FXML
-//    protected void onHelloButtonClick() {
-//        welcomeText.setText("Welcome to JavaFX Application!");
-//    }*/
-//}
