@@ -8,6 +8,8 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 
+// Key-yellow.png from https://freesvg.org/yellow-lock-key-vector-image (public domain)
+
 public class KryptoApplication extends Application {
 
     @Override

@@ -1,5 +1,7 @@
 package org.krypto;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -10,6 +12,7 @@ import javafx.stage.Stage;
 import org.apache.commons.io.FilenameUtils;
 
 import javax.swing.*;
+import javax.swing.text.html.ImageView;
 import java.io.*;
 import java.nio.file.Files;
 import java.security.SecureRandom;
@@ -29,13 +32,21 @@ public class KryptoController {
 
     @FXML
     private Button klucz_zapis_button;
+
+    @FXML
+    private Slider key_length_slider;
+
+    @FXML
+    private javafx.scene.image.ImageView key_length_display;
     private Stage stage;
     private Scene scene;
+
+    private int key_length = 192;
 
     public void switchToAES(ActionEvent event) throws IOException {
         // TODO: fix "might be null warning"
         Parent root = FXMLLoader.load(KryptoApplication.class.getResource("/org.krypto/aes.fxml"));
-        stage =(Stage)((MenuItem)event.getSource()).getParentPopup().getOwnerWindow().getScene().getWindow();
+        stage = (Stage) ((MenuItem) event.getSource()).getParentPopup().getOwnerWindow().getScene().getWindow();
         scene = new Scene(root);
         stage.setScene(scene);
         stage.show();
@@ -44,7 +55,7 @@ public class KryptoController {
     public void switchToDSA(ActionEvent event) throws IOException {
         // TODO: fix "might be null warning"
         Parent root = FXMLLoader.load(KryptoApplication.class.getResource("/org.krypto/dsa.fxml"));
-        stage =(Stage)((MenuItem)event.getSource()).getParentPopup().getOwnerWindow().getScene().getWindow();
+        stage = (Stage) ((MenuItem) event.getSource()).getParentPopup().getOwnerWindow().getScene().getWindow();
         scene = new Scene(root);
         stage.setScene(scene);
         stage.show();
@@ -59,9 +70,9 @@ public class KryptoController {
 
     // TODO: add "Quit" button handling
 
-    public void createRandomValue(){
-        klucz_text_button.setOnAction(ActionEvent-> {
-            byte[] secureRandomKeyBytes = new byte[256/8];
+    public void createRandomValue() {
+        klucz_text_button.setOnAction(ActionEvent -> {
+            byte[] secureRandomKeyBytes = new byte[key_length / 8];
             SecureRandom secureRandom = new SecureRandom();
             secureRandom.nextBytes(secureRandomKeyBytes);
             HexFormat hex = HexFormat.of();
@@ -70,8 +81,25 @@ public class KryptoController {
 
     }
 
-    public void saveKeyToFile(){
-        klucz_zapis_button.setOnAction(ActionEvent ->{
+    // TODO: fix
+    public void setKeyLength() {
+        key_length_slider.valueProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number t1) {
+                key_text_field.setText("reeeee");
+//                this.key_length = (int) key_length_slider.getValue();
+//                switch (this.key_length) {
+//                    case 128 -> key_length_display.setFitWidth(100);
+//                    case 192 -> key_length_display.setFitWidth(200);
+//                    case 256 -> key_length_display.setFitWidth(400);
+//                    default -> System.out.println("IMPOSSIBLE KEY LENGTH: " + this.key_length);
+//            }
+        }
+        });
+    }
+
+    public void saveKeyToFile() {
+        klucz_zapis_button.setOnAction(ActionEvent -> {
             JFrame parentFrame = new JFrame();
 
             JFileChooser fileChooser = new JFileChooser();
@@ -85,9 +113,9 @@ public class KryptoController {
                 if (FilenameUtils.getExtension(fileToSave.getName()).equalsIgnoreCase("aeskey")) {
                 } else {
                     fileToSave = new File(fileToSave + ".aeskey");
-                    fileToSave = new File(fileToSave.getParentFile(), FilenameUtils.getBaseName(fileToSave.getName())+".aeskey");
+                    fileToSave = new File(fileToSave.getParentFile(), FilenameUtils.getBaseName(fileToSave.getName()) + ".aeskey");
                 }
-                 byte[] key_bytes = HexFormat.of().parseHex(key_text_field.getText());
+                byte[] key_bytes = HexFormat.of().parseHex(key_text_field.getText());
 
                 try {
                     try (FileOutputStream outputStream = new FileOutputStream(fileToSave)) {
@@ -101,7 +129,7 @@ public class KryptoController {
         });
     }
 
-    public void loadKeyFromFile(){
+    public void loadKeyFromFile() {
         klucz_odczyt_button.setOnAction(ActionEvent -> {
             Alert a = new Alert(Alert.AlertType.ERROR, "TO NIE JEST PLIK KLUCZA! (.aeskey)", ButtonType.APPLY);
             JFrame parentFrame = new JFrame();
@@ -110,9 +138,9 @@ public class KryptoController {
             fileChooser.setDialogTitle("Specify a file to load");
 
             int userSelection = fileChooser.showOpenDialog(parentFrame);
-            if(userSelection == JFileChooser.APPROVE_OPTION){
+            if (userSelection == JFileChooser.APPROVE_OPTION) {
                 File selectedFile = fileChooser.getSelectedFile();
-                if (FilenameUtils.getExtension(selectedFile.getName()).equalsIgnoreCase("aeskey")){
+                if (FilenameUtils.getExtension(selectedFile.getName()).equalsIgnoreCase("aeskey")) {
                     try {
                         byte[] readData = Files.readAllBytes(selectedFile.toPath());
                         HexFormat hex = HexFormat.of();
@@ -121,8 +149,7 @@ public class KryptoController {
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
-                }
-                else{
+                } else {
                     a.setAlertType(Alert.AlertType.ERROR);
                     a.show();
                 }

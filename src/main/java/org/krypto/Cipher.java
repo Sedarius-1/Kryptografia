@@ -1,6 +1,7 @@
 package org.krypto;
 
 public interface Cipher {
-    // cipher()
-    // decipher()
+    void setKey(byte[] key);
+    byte[] encrypyData(byte[] plaintext);
+    byte[] decryptData(byte[] ciphertext);
 }
