@@ -39,13 +39,13 @@
 <?import javafx.scene.shape.*?>
 <?import javafx.scene.text.*?>
 
-<VBox prefHeight="600.0" prefWidth="960.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.krypto.KryptoController">
+<VBox prefHeight="600.0" prefWidth="960.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.krypto.AESKryptoController">
   <children>
     <MenuBar VBox.vgrow="NEVER">
       <menus>
         <Menu mnemonicParsing="false" text="Mode">
           <items>
-            <MenuItem mnemonicParsing="false" onAction="#switchToAES" text="AES encryption" />
+            <MenuItem mnemonicParsing="false" text="AES encryption" />
             <MenuItem mnemonicParsing="false" onAction="#switchToDSA" text="DSA sign" />
             <MenuItem mnemonicParsing="false" text="Quit" />
           </items>
@@ -68,7 +68,7 @@
                <font>
                   <Font name="Consolas" size="13.0" />
                </font></TextField>
-            <Button fx:id="klucz_text_button" layoutX="171.0" layoutY="64.0" maxHeight="-Infinity" maxWidth="-Infinity" mnemonicParsing="false" onAction="#createRandomValue" prefHeight="100.0" prefWidth="100.0" text="Generate new key" textAlignment="CENTER" textOverrun="CLIP" wrapText="true" />
+            <Button fx:id="key_gen_button" layoutX="171.0" layoutY="64.0" maxHeight="-Infinity" maxWidth="-Infinity" mnemonicParsing="false" prefHeight="100.0" prefWidth="100.0" text="Generate new key" textAlignment="CENTER" textOverrun="CLIP" wrapText="true" />
             <Button layoutX="403.0" layoutY="378.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="150.0" text="&lt;--- DECRYPT ---" />
             <Label layoutX="14.0" layoutY="39.0" text="Key" AnchorPane.leftAnchor="20.0" AnchorPane.topAnchor="40.0">
                <font>
@@ -82,8 +82,8 @@
             <Button layoutX="160.0" layoutY="449.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="200.0" text="Save plaintext to file" />
             <Button layoutX="720.0" layoutY="259.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="200.0" text="Read ciphertext from file" />
             <Button layoutX="720.0" layoutY="449.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="200.0" text="Save ciphertext to file" />
-            <Button fx:id="klucz_odczyt_button" layoutX="840.0" layoutY="119.0" mnemonicParsing="false" onAction="#loadKeyFromFile" prefHeight="50.0" prefWidth="100.0" text="Read from file" textAlignment="CENTER" wrapText="true" AnchorPane.rightAnchor="20.0" />
-            <Button fx:id="klucz_zapis_button" layoutX="840.0" layoutY="62.0" mnemonicParsing="false" onAction="#saveKeyToFile" prefHeight="50.0" prefWidth="100.0" text="Save to file" wrapText="true" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="62.0" />
+            <Button fx:id="key_read_button" layoutX="840.0" layoutY="119.0" mnemonicParsing="false" prefHeight="50.0" prefWidth="100.0" text="Read from file" textAlignment="CENTER" wrapText="true" AnchorPane.rightAnchor="20.0" />
+            <Button fx:id="key_save_button" layoutX="840.0" layoutY="62.0" mnemonicParsing="false" prefHeight="50.0" prefWidth="100.0" text="Save to file" wrapText="true" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="62.0" />
             <Label layoutX="40.0" layoutY="265.0" text="Plaintext:" AnchorPane.leftAnchor="40.0" />
             <Label layoutX="598.0" layoutY="265.0" text="Ciphertext:" />
             <Line endX="950.0" endY="35.0" layoutX="5.0" startY="35.0" />
@@ -96,7 +96,7 @@
                   <Insets top="3.0" />
                </padding>
             </Label>
-            <Slider fx:id="key_length_slider" blockIncrement="64.0" layoutX="25.0" layoutY="100.0" majorTickUnit="64.0" max="256.0" maxHeight="-Infinity" maxWidth="-Infinity" min="128.0" minHeight="-Infinity" minWidth="-Infinity" minorTickCount="0" onDragDone="#setKeyLength" onDragDropped="#setKeyLength" onMouseClicked="#setKeyLength" onMouseDragExited="#setKeyLength" onMouseDragReleased="#setKeyLength" onMouseExited="#setKeyLength" onMouseReleased="#setKeyLength" rotate="-45.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="192.0" AnchorPane.leftAnchor="25.0" />
+            <Slider fx:id="key_length_slider" blockIncrement="64.0" layoutX="25.0" layoutY="100.0" majorTickUnit="64.0" max="256.0" maxHeight="-Infinity" maxWidth="-Infinity" min="128.0" minHeight="-Infinity" minWidth="-Infinity" minorTickCount="0" rotate="-45.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="192.0" AnchorPane.leftAnchor="25.0" />
             <Label layoutX="8.0" layoutY="87.0" prefHeight="18.0" prefWidth="81.0" rotate="-45.0" text="Key length:" textAlignment="CENTER" AnchorPane.leftAnchor="8.0" />
             <ImageView fx:id="key_length_display" fitHeight="50.0" fitWidth="350.0" layoutX="290.0" layoutY="139.0" pickOnBounds="true">
                <image>
