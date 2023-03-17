@@ -9,6 +9,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
+import javafx.scene.image.Image;
 import org.apache.commons.io.FilenameUtils;
 
 import javax.swing.*;
@@ -85,10 +86,28 @@ public class KryptoController {
         key_length_slider.valueProperty().addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> observableValue, Number number, Number t1) {
+                File file;
+                // src/main/resources/org/krypto/
+                Image image;
                 switch ((int) key_length_slider.getValue()) {
-                    case 128 -> key_length_display.setFitWidth(100);
-                    case 192 -> key_length_display.setFitWidth(200);
-                    case 256 -> key_length_display.setFitWidth(400);
+                    case 128:
+                        file = new File("src/main/resources/org.krypto/Key-short.png");
+                        image = new Image(file.toURI().toString());
+                        key_length_display.setImage(image);
+                        key_length_display.setFitWidth(230);
+                        break;
+                    case 192:
+                        file = new File("src/main/resources/org.krypto/Key-medium.png");
+                        image = new Image(file.toURI().toString());
+                        key_length_display.setImage(image);
+                        key_length_display.setFitWidth(350);
+                        break;
+                    case 256:
+                        file = new File("src/main/resources/org.krypto/Key-long.png");
+                        image = new Image(file.toURI().toString());
+                        key_length_display.setImage(image);
+                        key_length_display.setFitWidth(460);
+                        break;
                 }
             }
         });
