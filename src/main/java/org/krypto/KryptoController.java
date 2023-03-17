@@ -41,7 +41,6 @@ public class KryptoController {
     private Stage stage;
     private Scene scene;
 
-    private int key_length = 192;
 
     public void switchToAES(ActionEvent event) throws IOException {
         // TODO: fix "might be null warning"
@@ -72,7 +71,7 @@ public class KryptoController {
 
     public void createRandomValue() {
         klucz_text_button.setOnAction(ActionEvent -> {
-            byte[] secureRandomKeyBytes = new byte[key_length / 8];
+            byte[] secureRandomKeyBytes = new byte[((int) key_length_slider.getValue()) / 8];
             SecureRandom secureRandom = new SecureRandom();
             secureRandom.nextBytes(secureRandomKeyBytes);
             HexFormat hex = HexFormat.of();
@@ -86,15 +85,12 @@ public class KryptoController {
         key_length_slider.valueProperty().addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> observableValue, Number number, Number t1) {
-                key_text_field.setText("reeeee");
-//                this.key_length = (int) key_length_slider.getValue();
-//                switch (this.key_length) {
-//                    case 128 -> key_length_display.setFitWidth(100);
-//                    case 192 -> key_length_display.setFitWidth(200);
-//                    case 256 -> key_length_display.setFitWidth(400);
-//                    default -> System.out.println("IMPOSSIBLE KEY LENGTH: " + this.key_length);
-//            }
-        }
+                switch ((int) key_length_slider.getValue()) {
+                    case 128 -> key_length_display.setFitWidth(100);
+                    case 192 -> key_length_display.setFitWidth(200);
+                    case 256 -> key_length_display.setFitWidth(400);
+                }
+            }
         });
     }
 

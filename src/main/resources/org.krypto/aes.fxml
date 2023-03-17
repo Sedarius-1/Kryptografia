@@ -96,7 +96,7 @@
                   <Insets top="3.0" />
                </padding>
             </Label>
-            <Slider fx:id="key_length_slider" blockIncrement="64.0" layoutX="25.0" layoutY="100.0" majorTickUnit="64.0" max="256.0" maxHeight="-Infinity" maxWidth="-Infinity" min="128.0" minHeight="-Infinity" minWidth="-Infinity" minorTickCount="0" onDragDone="#setKeyLength" onDragDropped="#setKeyLength" onMouseDragExited="#setKeyLength" onMouseDragReleased="#setKeyLength" rotate="-45.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="192.0" AnchorPane.leftAnchor="25.0" />
+            <Slider fx:id="key_length_slider" blockIncrement="64.0" layoutX="25.0" layoutY="100.0" majorTickUnit="64.0" max="256.0" maxHeight="-Infinity" maxWidth="-Infinity" min="128.0" minHeight="-Infinity" minWidth="-Infinity" minorTickCount="0" onDragDone="#setKeyLength" onDragDropped="#setKeyLength" onMouseClicked="#setKeyLength" onMouseDragExited="#setKeyLength" onMouseDragReleased="#setKeyLength" onMouseExited="#setKeyLength" onMouseReleased="#setKeyLength" rotate="-45.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="192.0" AnchorPane.leftAnchor="25.0" />
             <Label layoutX="8.0" layoutY="87.0" prefHeight="18.0" prefWidth="81.0" rotate="-45.0" text="Key length:" textAlignment="CENTER" AnchorPane.leftAnchor="8.0" />
             <ImageView fx:id="key_length_display" fitHeight="40.0" fitWidth="400.0" layoutX="291.0" layoutY="148.0" pickOnBounds="true">
                <image>
