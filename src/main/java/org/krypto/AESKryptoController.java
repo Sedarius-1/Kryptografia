@@ -1,7 +1,5 @@
 package org.krypto;
 
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -9,17 +7,20 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.stage.Stage;
 import javafx.scene.image.Image;
+import javafx.stage.Stage;
 import org.apache.commons.io.FilenameUtils;
 
 import javax.swing.*;
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.security.SecureRandom;
 import java.util.HexFormat;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 
@@ -36,14 +37,53 @@ public class AESKryptoController implements Initializable {
     @FXML
     private Slider key_length_slider;
     @FXML
+    private Button read_plaintext_button;
+    @FXML
+    private TextArea plaintext_textarea;
+    @FXML
+    private Button save_plaintext_button;
+    @FXML
+    private Button read_ciphertext_button;
+    @FXML
+    private TextArea ciphertext_textarea;
+    @FXML
+    private Button save_ciphertext_button;
+
+
+    @FXML
     private javafx.scene.image.ImageView key_length_display;
     private Stage stage;
     private Scene scene;
 
-
+    private void setKeyLength(int value){
+        File file;
+        Image image;
+        switch (value) {
+            case 128 -> {
+                file = new File("src/main/resources/org.krypto/Key-short.png");
+                image = new Image(file.toURI().toString());
+                key_length_display.setImage(image);
+                key_length_display.setFitWidth(230);
+            }
+            case 192 -> {
+                file = new File("src/main/resources/org.krypto/Key-medium.png");
+                image = new Image(file.toURI().toString());
+                key_length_display.setImage(image);
+                key_length_display.setFitWidth(350);
+            }
+            case 256 -> {
+                file = new File("src/main/resources/org.krypto/Key-long.png");
+                image = new Image(file.toURI().toString());
+                key_length_display.setImage(image);
+                key_length_display.setFitWidth(460);
+            }
+        }
+    }
     // Initialize all "onClick" type events for UI elements
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+        //TODO: validate user input in text file
+
         // Generate new key
         key_gen_button.setOnAction(ActionEvent -> {
             byte[] secureRandomKeyBytes = new byte[((int) key_length_slider.getValue()) / 8];
@@ -54,34 +94,8 @@ public class AESKryptoController implements Initializable {
         });
 
         // Change key length
-        key_length_slider.valueProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number t1) {
-                File file;
-                // src/main/resources/org/krypto/
-                Image image;
-                switch ((int) key_length_slider.getValue()) {
-                    case 128 -> {
-                        file = new File("src/main/resources/org.krypto/Key-short.png");
-                        image = new Image(file.toURI().toString());
-                        key_length_display.setImage(image);
-                        key_length_display.setFitWidth(230);
-                    }
-                    case 192 -> {
-                        file = new File("src/main/resources/org.krypto/Key-medium.png");
-                        image = new Image(file.toURI().toString());
-                        key_length_display.setImage(image);
-                        key_length_display.setFitWidth(350);
-                    }
-                    case 256 -> {
-                        file = new File("src/main/resources/org.krypto/Key-long.png");
-                        image = new Image(file.toURI().toString());
-                        key_length_display.setImage(image);
-                        key_length_display.setFitWidth(460);
-                    }
-                }
-            }
-        });
+        key_length_slider.valueProperty().addListener((observableValue, number, t1) ->
+                setKeyLength((int)key_length_slider.getValue()));
 
         // Save key to file
         key_save_button.setOnAction(ActionEvent -> {
@@ -94,9 +108,8 @@ public class AESKryptoController implements Initializable {
 
             if (userSelection == JFileChooser.APPROVE_OPTION) {
                 File fileToSave = fileChooser.getSelectedFile();
-                // TODO: co to kurwa jest?
-                if (FilenameUtils.getExtension(fileToSave.getName()).equalsIgnoreCase("aeskey")) {
-                } else {
+
+                if (!FilenameUtils.getExtension(fileToSave.getName()).equalsIgnoreCase("aeskey")) {
                     fileToSave = new File(fileToSave + ".aeskey");
                     fileToSave = new File(fileToSave.getParentFile(), FilenameUtils.getBaseName(fileToSave.getName()) + ".aeskey");
                 }
@@ -105,9 +118,16 @@ public class AESKryptoController implements Initializable {
                 try {
                     try (FileOutputStream outputStream = new FileOutputStream(fileToSave)) {
                         outputStream.write(key_bytes);
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION,
+                      "KEY FILE SAVED CORRECTLY", ButtonType.APPLY);
+                        alert.show();
                     }
                 } catch (IOException e) {
+                    Alert alert = new Alert(Alert.AlertType.WARNING,
+                 "ERROR DURING FILE SAVING", ButtonType.APPLY);
+                    alert.show();
                     throw new RuntimeException(e);
+
                 }
                 System.out.println("Save as file: " + fileToSave.getAbsolutePath());
             }
@@ -115,7 +135,7 @@ public class AESKryptoController implements Initializable {
 
         // Read key from file
         key_read_button.setOnAction(ActionEvent -> {
-            Alert a = new Alert(Alert.AlertType.ERROR, "TO NIE JEST PLIK KLUCZA! (.aeskey)", ButtonType.APPLY);
+
             JFrame parentFrame = new JFrame();
 
             JFileChooser fileChooser = new JFileChooser();
@@ -129,18 +149,154 @@ public class AESKryptoController implements Initializable {
                         byte[] readData = Files.readAllBytes(selectedFile.toPath());
                         HexFormat hex = HexFormat.of();
                         key_text_field.setText(hex.formatHex(readData));
-
+                        key_length_slider.setValue(hex.formatHex(readData).length()*4.0);
+                        setKeyLength((int)key_length_slider.getValue());
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION,
+                      "KEY FILE LOADED PROPERLY", ButtonType.APPLY);
+                        alert.show();
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
                 } else {
-                    a.setAlertType(Alert.AlertType.ERROR);
-                    a.show();
+                    Alert alert = new Alert(Alert.AlertType.ERROR,
+                 "THIS IS NOT A VALID KEY FILE (.aeskey)", ButtonType.APPLY);
+                    alert.show();
+                }
+            }
+        });
+
+        // Save plaintext to file
+        save_plaintext_button.setOnAction(ActionEvent -> {
+            JFrame parentFrame = new JFrame();
+
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Specify a file to save");
+
+            int userSelection = fileChooser.showSaveDialog(parentFrame);
+
+            if (userSelection == JFileChooser.APPROVE_OPTION) {
+                File fileToSave = fileChooser.getSelectedFile();
+
+                if (!FilenameUtils.getExtension(fileToSave.getName()).equalsIgnoreCase("txt")) {
+                    fileToSave = new File(fileToSave + ".txt");
+                    fileToSave = new File(fileToSave.getParentFile(), FilenameUtils.getBaseName(fileToSave.getName()) + ".txt");
+                }
+                byte[] key_bytes = plaintext_textarea.getText().getBytes();
+
+                try {
+                    try (FileOutputStream outputStream = new FileOutputStream(fileToSave)) {
+                        outputStream.write(key_bytes);
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION,
+                                "PLAINTEXT FILE SAVED CORRECTLY", ButtonType.APPLY);
+                        alert.show();
+                    }
+                } catch (IOException e) {
+                    Alert alert = new Alert(Alert.AlertType.WARNING,
+                            "ERROR DURING FILE SAVING", ButtonType.APPLY);
+                    alert.show();
+                    throw new RuntimeException(e);
+
+                }
+                System.out.println("Save as file: " + fileToSave.getAbsolutePath());
+            }
+        });
+
+        //Read plaintext from file
+        read_plaintext_button.setOnAction(ActionEvent -> {
+            JFrame parentFrame = new JFrame();
+
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Specify a file to load");
+
+            int userSelection = fileChooser.showOpenDialog(parentFrame);
+            if (userSelection == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = fileChooser.getSelectedFile();
+                if (FilenameUtils.getExtension(selectedFile.getName()).equalsIgnoreCase("txt")) {
+                    try {
+                        String readData = Files.readString(selectedFile.toPath());
+                        plaintext_textarea.setText(readData);
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION,
+                     "CIPHERED FILE LOADED PROPERLY", ButtonType.APPLY);
+                        alert.show();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                } else {
+                    Alert alert = new Alert(Alert.AlertType.ERROR,
+                            "THIS IS NOT A VALID TEXT FILE (.txt)", ButtonType.APPLY);
+                    alert.show();
+                }
+            }
+        });
+
+        // Save ciphered text to file
+        save_ciphertext_button.setOnAction(ActionEvent -> {
+            JFrame parentFrame = new JFrame();
+
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Specify a file to save");
+
+            int userSelection = fileChooser.showSaveDialog(parentFrame);
+
+            if (userSelection == JFileChooser.APPROVE_OPTION) {
+                File fileToSave = fileChooser.getSelectedFile();
+
+                if (!FilenameUtils.getExtension(fileToSave.getName()).equalsIgnoreCase("aesciphered")) {
+                    fileToSave = new File(fileToSave + ".aesciphered");
+                    fileToSave = new File(fileToSave.getParentFile(), FilenameUtils.getBaseName(fileToSave.getName()) + ".aesciphered");
+                }
+                byte[] key_bytes = HexFormat.of().parseHex(ciphertext_textarea.getText());
+
+                try {
+                    try (FileOutputStream outputStream = new FileOutputStream(fileToSave)) {
+                        outputStream.write(key_bytes);
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION,
+                                "CIPHERED FILE SAVED CORRECTLY", ButtonType.APPLY);
+                        alert.show();
+                    }
+                } catch (IOException e) {
+                    Alert alert = new Alert(Alert.AlertType.WARNING,
+                            "ERROR DURING FILE SAVING", ButtonType.APPLY);
+                    alert.show();
+                    throw new RuntimeException(e);
+
+                }
+                System.out.println("Save as file: " + fileToSave.getAbsolutePath());
+            }
+        });
+
+        // Read ciphered text from file
+        read_ciphertext_button.setOnAction(ActionEvent -> {
+
+            JFrame parentFrame = new JFrame();
+
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Specify a file to load");
+
+            int userSelection = fileChooser.showOpenDialog(parentFrame);
+            if (userSelection == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = fileChooser.getSelectedFile();
+                if (FilenameUtils.getExtension(selectedFile.getName()).equalsIgnoreCase("aesciphered")) {
+                    try {
+                        byte[] readData = Files.readAllBytes(selectedFile.toPath());
+                        HexFormat hex = HexFormat.of();
+                        ciphertext_textarea.setText(hex.formatHex(readData));
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION,
+                                "KEY FILE LOADED PROPERLY", ButtonType.APPLY);
+                        alert.show();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                } else {
+                    Alert alert = new Alert(Alert.AlertType.ERROR,
+                            "THIS IS NOT A VALID KEY FILE (.aesciphered)", ButtonType.APPLY);
+                    alert.show();
                 }
             }
         });
     }
 
+    //Switch to DSA button handling
     public void switchToDSA(ActionEvent event) throws IOException {
         Parent root = FXMLLoader.load(Objects.requireNonNull(KryptoApplication.class.getResource("/org.krypto/dsa.fxml")));
         stage = (Stage) ((MenuItem) event.getSource()).getParentPopup().getOwnerWindow().getScene().getWindow();
@@ -149,14 +305,26 @@ public class AESKryptoController implements Initializable {
         stage.show();
     }
 
-    public void about(ActionEvent event) {
+    // "About" button handling
+    public void about() {
         String about_message = "App made as a university assignment by Jakub Kalinowski and Tomasz Kowalczyk";
         Alert a = new Alert(Alert.AlertType.INFORMATION, about_message, ButtonType.OK);
         a.setTitle("About");
         a.show();
     }
 
-    // TODO: add "Quit" button handling
+    // "Quit" button handling
+    public void quit() {
+        String quit_message = "Thank you for using our application!";
+        Alert exitAlert = new Alert(Alert.AlertType.NONE, quit_message, ButtonType.OK);
+        exitAlert.setTitle("Goodbye!");
+        Optional<ButtonType> result = exitAlert.showAndWait();
+        if(result.isEmpty() || result.get() == ButtonType.OK){
+            System.exit(0);
+        }
+
+
+    }
 
 
 }
