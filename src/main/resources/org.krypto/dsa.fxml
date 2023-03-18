@@ -44,12 +44,12 @@
           <items>
             <MenuItem mnemonicParsing="false" onAction="#switchToAES" text="AES encryption" />
             <MenuItem disable="true" mnemonicParsing="false" text="DSA sign" />
-            <MenuItem mnemonicParsing="false" text="Quit" />
+            <MenuItem mnemonicParsing="false" onAction="#quit" text="Quit" />
           </items>
         </Menu>
         <Menu mnemonicParsing="false" text="Help">
           <items>
-            <MenuItem mnemonicParsing="false" text="About" />
+            <MenuItem mnemonicParsing="false" onAction="#about" text="About" />
           </items>
         </Menu>
       </menus>
