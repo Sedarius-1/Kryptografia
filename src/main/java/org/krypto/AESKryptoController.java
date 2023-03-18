@@ -25,6 +25,7 @@ import java.util.ResourceBundle;
 
 
 public class AESKryptoController implements Initializable {
+    private static final String ENCRYPTED_FILE_EXT = "aescrypt";
 
     @FXML
     private Button key_read_button;
@@ -52,10 +53,8 @@ public class AESKryptoController implements Initializable {
 
     @FXML
     private javafx.scene.image.ImageView key_length_display;
-    private Stage stage;
-    private Scene scene;
 
-    private void setKeyLength(int value){
+    private void setKeyLength(int value) {
         File file;
         Image image;
         switch (value) {
@@ -79,10 +78,11 @@ public class AESKryptoController implements Initializable {
             }
         }
     }
+
     // Initialize all "onClick" type events for UI elements
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        //TODO: validate user input in text file
+        //TODO: validate user input in key textbox (only hex chars, if too short - pad with 0, if between two lengths - cut or pad)
 
         // Generate new key
         key_gen_button.setOnAction(ActionEvent -> {
@@ -95,7 +95,7 @@ public class AESKryptoController implements Initializable {
 
         // Change key length
         key_length_slider.valueProperty().addListener((observableValue, number, t1) ->
-                setKeyLength((int)key_length_slider.getValue()));
+                setKeyLength((int) key_length_slider.getValue()));
 
         // Save key to file
         key_save_button.setOnAction(ActionEvent -> {
@@ -119,12 +119,12 @@ public class AESKryptoController implements Initializable {
                     try (FileOutputStream outputStream = new FileOutputStream(fileToSave)) {
                         outputStream.write(key_bytes);
                         Alert alert = new Alert(Alert.AlertType.INFORMATION,
-                      "KEY FILE SAVED CORRECTLY", ButtonType.APPLY);
+                                "KEY FILE SAVED CORRECTLY", ButtonType.APPLY);
                         alert.show();
                     }
                 } catch (IOException e) {
                     Alert alert = new Alert(Alert.AlertType.WARNING,
-                 "ERROR DURING FILE SAVING", ButtonType.APPLY);
+                            "ERROR DURING FILE SAVING", ButtonType.APPLY);
                     alert.show();
                     throw new RuntimeException(e);
 
@@ -149,17 +149,17 @@ public class AESKryptoController implements Initializable {
                         byte[] readData = Files.readAllBytes(selectedFile.toPath());
                         HexFormat hex = HexFormat.of();
                         key_text_field.setText(hex.formatHex(readData));
-                        key_length_slider.setValue(hex.formatHex(readData).length()*4.0);
-                        setKeyLength((int)key_length_slider.getValue());
+                        key_length_slider.setValue(hex.formatHex(readData).length() * 4.0);
+                        setKeyLength((int) key_length_slider.getValue());
                         Alert alert = new Alert(Alert.AlertType.INFORMATION,
-                      "KEY FILE LOADED PROPERLY", ButtonType.APPLY);
+                                "KEY FILE LOADED PROPERLY", ButtonType.APPLY);
                         alert.show();
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
                 } else {
                     Alert alert = new Alert(Alert.AlertType.ERROR,
-                 "THIS IS NOT A VALID KEY FILE (.aeskey)", ButtonType.APPLY);
+                            "THIS IS NOT A VALID KEY FILE (.aeskey)", ButtonType.APPLY);
                     alert.show();
                 }
             }
@@ -211,14 +211,14 @@ public class AESKryptoController implements Initializable {
             int userSelection = fileChooser.showOpenDialog(parentFrame);
             if (userSelection == JFileChooser.APPROVE_OPTION) {
                 File selectedFile = fileChooser.getSelectedFile();
-                // TODO: unnecessary check (we can handle any file type)
+                // TODO: unnecessary check (we can handle any file type (KARBO SPIIIIIIN)
                 if (FilenameUtils.getExtension(selectedFile.getName()).equalsIgnoreCase("txt")) {
                     try {
                         String readData = Files.readString(selectedFile.toPath());
                         // TODO: textareas should contain hex encoded data
                         plaintext_textarea.setText(readData);
                         Alert alert = new Alert(Alert.AlertType.INFORMATION,
-                     "FILE LOADED PROPERLY", ButtonType.APPLY);
+                                "FILE LOADED PROPERLY", ButtonType.APPLY);
                         alert.show();
                     } catch (IOException e) {
                         throw new RuntimeException(e);
@@ -243,9 +243,9 @@ public class AESKryptoController implements Initializable {
             if (userSelection == JFileChooser.APPROVE_OPTION) {
                 File fileToSave = fileChooser.getSelectedFile();
 
-                if (!FilenameUtils.getExtension(fileToSave.getName()).equalsIgnoreCase("aesciphered")) {
-                    fileToSave = new File(fileToSave + ".aesciphered");
-                    fileToSave = new File(fileToSave.getParentFile(), FilenameUtils.getBaseName(fileToSave.getName()) + ".aesciphered");
+                if (!FilenameUtils.getExtension(fileToSave.getName()).equalsIgnoreCase(ENCRYPTED_FILE_EXT)) {
+                    fileToSave = new File(fileToSave + "." + ENCRYPTED_FILE_EXT);
+                    fileToSave = new File(fileToSave.getParentFile(), FilenameUtils.getBaseName(fileToSave.getName()) + "." + ENCRYPTED_FILE_EXT);
                 }
                 byte[] encrypted_bytes = HexFormat.of().parseHex(ciphertext_textarea.getText());
 
@@ -277,7 +277,7 @@ public class AESKryptoController implements Initializable {
             int userSelection = fileChooser.showOpenDialog(parentFrame);
             if (userSelection == JFileChooser.APPROVE_OPTION) {
                 File selectedFile = fileChooser.getSelectedFile();
-                if (FilenameUtils.getExtension(selectedFile.getName()).equalsIgnoreCase("aesciphered")) {
+                if (FilenameUtils.getExtension(selectedFile.getName()).equalsIgnoreCase(ENCRYPTED_FILE_EXT)) {
                     try {
                         byte[] readData = Files.readAllBytes(selectedFile.toPath());
                         HexFormat hex = HexFormat.of();
@@ -290,7 +290,7 @@ public class AESKryptoController implements Initializable {
                     }
                 } else {
                     Alert alert = new Alert(Alert.AlertType.ERROR,
-                            "THIS IS NOT A VALID AES ENCRYPTED FILE (.aesciphered)", ButtonType.APPLY);
+                            "THIS IS NOT A VALID AES ENCRYPTED FILE (." + ENCRYPTED_FILE_EXT + ")", ButtonType.APPLY);
                     alert.show();
                 }
             }
@@ -300,8 +300,8 @@ public class AESKryptoController implements Initializable {
     //Switch to DSA button handling
     public void switchToDSA(ActionEvent event) throws IOException {
         Parent root = FXMLLoader.load(Objects.requireNonNull(KryptoApplication.class.getResource("/org.krypto/dsa.fxml")));
-        stage = (Stage) ((MenuItem) event.getSource()).getParentPopup().getOwnerWindow().getScene().getWindow();
-        scene = new Scene(root);
+        Stage stage = (Stage) ((MenuItem) event.getSource()).getParentPopup().getOwnerWindow().getScene().getWindow();
+        Scene scene = new Scene(root);
         stage.setScene(scene);
         stage.show();
     }
@@ -320,7 +320,7 @@ public class AESKryptoController implements Initializable {
         Alert exitAlert = new Alert(Alert.AlertType.NONE, quit_message, ButtonType.OK);
         exitAlert.setTitle("Goodbye!");
         Optional<ButtonType> result = exitAlert.showAndWait();
-        if(result.isEmpty() || result.get() == ButtonType.OK){
+        if (result.isEmpty() || result.get() == ButtonType.OK) {
             System.exit(0);
         }
     }
