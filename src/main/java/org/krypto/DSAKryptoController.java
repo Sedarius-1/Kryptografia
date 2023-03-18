@@ -20,6 +20,7 @@ import java.nio.file.Files;
 import java.security.SecureRandom;
 import java.util.HexFormat;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 
@@ -50,7 +51,15 @@ public class DSAKryptoController implements Initializable {
         a.show();
     }
 
-    // TODO: add "Quit" button handling
-
+    // "Quit" button handling
+    public void quit() {
+        String quit_message = "Thank you for using our application!";
+        Alert exitAlert = new Alert(Alert.AlertType.NONE, quit_message, ButtonType.OK);
+        exitAlert.setTitle("Goodbye!");
+        Optional<ButtonType> result = exitAlert.showAndWait();
+        if(result.isEmpty() || result.get() == ButtonType.OK){
+            System.exit(0);
+        }
+    }
 
 }
