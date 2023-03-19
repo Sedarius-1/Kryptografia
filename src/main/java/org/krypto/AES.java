@@ -12,6 +12,7 @@ public class AES implements Cipher {
         this.key = key;
     }
 
+    // ENCRYPTION:
     private byte[] pad(byte[] data) {
         int pad_length;
         pad_length = 16 - (data.length % 16);
@@ -48,7 +49,7 @@ public class AES implements Cipher {
 
     // https://www.geeksforgeeks.org/advanced-encryption-standard-aes/
     @Override
-    public byte[] encrypyData(byte[] plaintext) {
+    public byte[] encryptData(byte[] plaintext) {
         byte[] padded_plaintext = pad(plaintext);
         int round_count;
         switch (key.length) {
@@ -91,6 +92,7 @@ public class AES implements Cipher {
         return ciphertext;
     }
 
+    // DECRYPTION:
 
     private byte[] unpad(byte[] plaintext) {
         System.out.println("TODO: AES:unpad");

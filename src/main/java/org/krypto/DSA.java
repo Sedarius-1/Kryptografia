@@ -7,7 +7,7 @@ public class DSA implements Cipher{
     }
 
     @Override
-    public byte[] encrypyData(byte[] plaintext) {
+    public byte[] encryptData(byte[] plaintext) {
         return new byte[0];
     }
 
