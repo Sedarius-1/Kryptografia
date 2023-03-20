@@ -7,8 +7,12 @@ public class AES implements Cipher {
 
     private final int[] rcon_table = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36};
 
+    private byte[] SubBox;
+    private byte[] DomBox;
+
     public AES(byte[] key) {
         this.key = key;
+        initSBoxes();
     }
 
     @Override
@@ -16,23 +20,33 @@ public class AES implements Cipher {
         this.key = key;
     }
 
+    private void initSBoxes() {
+        // https://en.wikipedia.org/wiki/Rijndael_S-box
+        // SubBox - forward
+        // DomBox - inverse
+        System.out.println("TODO: AES:initSBoxes");
+    }
+
     private byte[] rcon(int number) {
         return new byte[]{(byte) rcon_table[number - 1], 0, 0, 0};
     }
 
     private byte[] SubWord(byte[] word) {
-        System.out.println("TODO: AES:SubWord");
-        return new byte[0];
+        return new byte[]{SubBox[word[0]],
+                SubBox[word[1]],
+                SubBox[word[2]],
+                SubBox[word[3]]};
     }
 
     private byte[] RotWord(byte[] word) {
-        System.out.println("TODO: AES:RotWord");
-        return new byte[0];
+        return new byte[]{word[1], word[2], word[3], word[0]};
     }
 
     private byte[] XORWord(byte[] word1, byte[] word2) {
-        System.out.println("TODO: AES:XORWord");
-        return new byte[0];
+        return new byte[]{(byte) (word1[0] ^ word2[0]),
+                (byte) (word1[1] ^ word2[1]),
+                (byte) (word1[2] ^ word2[2]),
+                (byte) (word1[3] ^ word2[3])};
     }
 
     // ENCRYPTION:
@@ -46,6 +60,7 @@ public class AES implements Cipher {
     }
 
     public void encryptInitSubKeys(int round_count) {
+        // https://en.wikipedia.org/wiki/AES_key_schedule
         sub_keys = new byte[16 * round_count];
         int N = key.length / 4;
         for (int i = 0; i < 4 * round_count; i += 4) {
@@ -84,10 +99,8 @@ public class AES implements Cipher {
                 Wi = XORWord(Win, Wi1);
 
                 System.arraycopy(Wi, 0, sub_keys, i, 4);
-                // Wi-n XOR Wi-1
                 continue;
             }
-
         }
     }
 
@@ -136,6 +149,7 @@ public class AES implements Cipher {
 
         byte[] ciphertext = new byte[padded_plaintext.length];
         // encrypt block
+        // https://en.wikipedia.org/wiki/Advanced_Encryption_Standard
         for (int block_start_index = 0; block_start_index < plaintext.length; block_start_index += 16) {
             byte[] block = new byte[16];
             // take one block
