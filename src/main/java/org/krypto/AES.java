@@ -20,10 +20,19 @@ public class AES implements Cipher {
         this.key = key;
     }
 
+    private void debugPrintBlock(byte[] block) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : block) {
+            sb.append(String.format("%02x", b));
+        }
+        System.out.println(sb.toString());
+    }
+
     private void initSBoxes() {
         // https://en.wikipedia.org/wiki/Rijndael_S-box
         // SubBox - forward
         // DomBox - inverse
+        // TODO
         System.out.println("TODO: AES:initSBoxes");
     }
 
@@ -111,26 +120,53 @@ public class AES implements Cipher {
     }
 
     private byte[] encryptSubBytes(byte[] block) {
-        System.out.println("TODO: AES:encryptSubBytes");
-        return new byte[0];
+        for (int i = 0; i < 16; i++) block[i] = SubBox[block[i]];
+        return block;
     }
 
     private byte[] encryptShiftRows(byte[] block) {
-        System.out.println("TODO: AES:encryptShiftRows");
+        //  0  1  2  3
+        //  4  5  6  7
+        //  8  9 10 11
+        // 12 13 14 15
+        // Ignore row 0
+        // Shift row 1 by 1
+        byte tmp = block[4];
+        block[4] = block[5];
+        block[5] = block[6];
+        block[6] = block[7];
+        block[7] = tmp;
+        // Shift row 2 by 2
+        tmp = block[8];
+        block[8] = block[10];
+        block[10] = tmp;
+        tmp = block[9];
+        block[9] = block[11];
+        block[11] = tmp;
+        // Shift row 3 by 3
+        tmp = block[12];
+        block[12] = block[15];
+        block[15] = block[14];
+        block[14] = block[13];
+        block[13] = tmp;
         return new byte[0];
     }
 
     private byte[] encryptMixColumns(byte[] block) {
+        // TODO
         System.out.println("TODO: AES:encryptMixColumns");
         return new byte[0];
     }
 
     private byte[] encryptAddRoundKey(byte[] block, byte[] round_key) {
-        System.out.println("TODO: AES:encryptAddRoundKey");
-        return new byte[0];
+        for (int i = 0; i < 16; i++) {
+            block[i] = (byte) (block[i] ^ round_key[i]);
+        }
+        return block;
     }
 
     // https://www.geeksforgeeks.org/advanced-encryption-standard-aes/
+    // https://www.cryptool.org/en/cto/aes-step-by-step
     @Override
     public byte[] encryptData(byte[] plaintext) {
         byte[] padded_plaintext = pad(plaintext);
@@ -181,21 +217,25 @@ public class AES implements Cipher {
     // DECRYPTION:
 
     private byte[] unpad(byte[] plaintext) {
+        // TODO
         System.out.println("TODO: AES:unpad");
         return new byte[0];
     }
 
     private byte[] decryptGetRoundKey(int round_number) {
+        // TODO
         System.out.println("TODO: AES:decryptGetRoundKey");
         return new byte[0];
     }
 
     private byte[] decryptAddRoundKey(byte[] block, byte[] round_key) {
+        // TODO
         System.out.println("TODO: AES:decryptAddRoundKey");
         return new byte[0];
     }
 
     private byte[] decryptMixColumns(byte[] block) {
+        // TODO
         System.out.println("TODO: AES:decryptMixColumns");
         return new byte[0];
     }
@@ -206,6 +246,7 @@ public class AES implements Cipher {
     }
 
     private byte[] decryptSubBytes(byte[] block) {
+        // TODO
         System.out.println("TODO: AES:decryptSubBytes");
         return new byte[0];
     }
@@ -222,6 +263,8 @@ public class AES implements Cipher {
                 return null;
             }
         }
+
+        // TODO: I don't know if any of this is correct
 
         byte[] plaintext = new byte[ciphertext.length];
         // decrypt block
