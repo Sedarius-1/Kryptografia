@@ -3,6 +3,10 @@ package org.krypto;
 public class AES implements Cipher {
     private byte[] key;
 
+    private byte[] sub_keys;
+
+    private final int[] rcon_table = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36};
+
     public AES(byte[] key) {
         this.key = key;
     }
@@ -10,6 +14,25 @@ public class AES implements Cipher {
     @Override
     public void setKey(byte[] key) {
         this.key = key;
+    }
+
+    private byte[] rcon(int number) {
+        return new byte[]{(byte) rcon_table[number - 1], 0, 0, 0};
+    }
+
+    private byte[] SubWord(byte[] word) {
+        System.out.println("TODO: AES:SubWord");
+        return new byte[0];
+    }
+
+    private byte[] RotWord(byte[] word) {
+        System.out.println("TODO: AES:RotWord");
+        return new byte[0];
+    }
+
+    private byte[] XORWord(byte[] word1, byte[] word2) {
+        System.out.println("TODO: AES:XORWord");
+        return new byte[0];
     }
 
     // ENCRYPTION:
@@ -22,9 +45,56 @@ public class AES implements Cipher {
         return padded_data;
     }
 
+    public void encryptInitSubKeys(int round_count) {
+        sub_keys = new byte[16 * round_count];
+        int N = key.length / 4;
+        for (int i = 0; i < 4 * round_count; i += 4) {
+            if (i < N) {
+                System.arraycopy(key, i, sub_keys, i, 4);
+                continue;
+            } else if (i >= N && i % N == 0) {
+                byte[] Win = new byte[4];
+                System.arraycopy(sub_keys, i - (N * 4), Win, 0, 4);
+                byte[] Wi1 = new byte[4];
+                System.arraycopy(sub_keys, i - 4, Wi1, 0, 4);
+
+                byte[] Wi;
+                Wi = XORWord(XORWord(Win, SubWord(RotWord(Wi1))), rcon(i / N));
+
+                System.arraycopy(Wi, 0, sub_keys, i, 4);
+                continue;
+            } else if (i >= N && N > 6 && i % N == 4) {
+                byte[] Win = new byte[4];
+                System.arraycopy(sub_keys, i - (N * 4), Win, 0, 4);
+                byte[] Wi1 = new byte[4];
+                System.arraycopy(sub_keys, i - 4, Wi1, 0, 4);
+
+                byte[] Wi;
+                Wi = XORWord(Win, SubWord(Wi1));
+
+                System.arraycopy(Wi, 0, sub_keys, i, 4);
+                continue;
+            } else {
+                byte[] Win = new byte[4];
+                System.arraycopy(sub_keys, i - (N * 4), Win, 0, 4);
+                byte[] Wi1 = new byte[4];
+                System.arraycopy(sub_keys, i - 4, Wi1, 0, 4);
+
+                byte[] Wi;
+                Wi = XORWord(Win, Wi1);
+
+                System.arraycopy(Wi, 0, sub_keys, i, 4);
+                // Wi-n XOR Wi-1
+                continue;
+            }
+
+        }
+    }
+
     private byte[] encryptGetRoundKey(int round_number) {
-        System.out.println("TODO: AES:getRoundKey");
-        return new byte[0];
+        byte[] sub_key = new byte[16];
+        System.arraycopy(sub_keys, round_number * 16, sub_key, 0, 16);
+        return sub_key;
     }
 
     private byte[] encryptSubBytes(byte[] block) {
@@ -61,6 +131,8 @@ public class AES implements Cipher {
                 return null;
             }
         }
+
+        encryptInitSubKeys(round_count);
 
         byte[] ciphertext = new byte[padded_plaintext.length];
         // encrypt block
