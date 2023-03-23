@@ -69,12 +69,12 @@
                   <Font name="Consolas" size="13.0" />
                </font></TextField>
             <Button fx:id="key_gen_button" layoutX="171.0" layoutY="64.0" maxHeight="-Infinity" maxWidth="-Infinity" mnemonicParsing="false" prefHeight="100.0" prefWidth="100.0" text="Generate new key" textAlignment="CENTER" textOverrun="CLIP" wrapText="true" />
-            <Button layoutX="403.0" layoutY="378.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="150.0" text="&lt;--- DECRYPT ---" />
+            <Button fx:id="decrypt" layoutX="403.0" layoutY="378.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="150.0" text="&lt;--- DECRYPT ---" />
             <Label layoutX="14.0" layoutY="39.0" text="Key" AnchorPane.leftAnchor="20.0" AnchorPane.topAnchor="40.0">
                <font>
                   <Font size="16.0" />
                </font></Label>
-            <Button layoutX="403.0" layoutY="328.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="150.0" text="--- ENCRYPT ---&gt;" />
+            <Button fx:id="encrypt" layoutX="403.0" layoutY="328.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="150.0" text="--- ENCRYPT ---&gt;" />
             <Label layoutX="290.0" layoutY="78.0" prefHeight="18.0" prefWidth="65.0" text="Key:" />
             <TextArea fx:id="plaintext_textarea" layoutX="37.0" layoutY="290.0" prefHeight="150.0" prefWidth="320.0" AnchorPane.leftAnchor="40.0" />
             <TextArea fx:id="ciphertext_textarea" layoutX="577.0" layoutY="290.0" prefHeight="150.0" prefWidth="320.0" AnchorPane.rightAnchor="40.0" />
