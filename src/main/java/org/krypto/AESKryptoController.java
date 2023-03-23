@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.SecureRandom;
 import java.util.HexFormat;
@@ -177,6 +178,26 @@ public class AESKryptoController implements Initializable {
             }
         });
 
+        plaintext_textarea.textProperty().addListener((obs, old, niu) -> {
+            plaintext_file_content = plaintext_textarea.getText().getBytes(StandardCharsets.UTF_8);
+            File file = new File("src/main/resources/org.krypto/file_empty.png");
+            Image image = new Image(file.toURI().toString());
+            file_indicator_read_plaintext.setImage(image);
+            file = new File("src/main/resources/org.krypto/file_checked.png");
+            image = new Image(file.toURI().toString());
+            file_indicator_save_plaintext.setImage(image);
+        });
+
+        ciphertext_textarea.textProperty().addListener((obs, old, niu) -> {
+            ciphertext_file_content = HexFormat.of().parseHex(ciphertext_textarea.getText());
+            File file = new File("src/main/resources/org.krypto/file_empty.png");
+            Image image = new Image(file.toURI().toString());
+            file_indicator_read_ciphertext.setImage(image);
+            file = new File("src/main/resources/org.krypto/file_checked.png");
+            image = new Image(file.toURI().toString());
+            file_indicator_save_ciphertext.setImage(image);
+        });
+
         // Save plaintext to file
         save_plaintext_button.setOnAction(ActionEvent -> {
             JFrame parentFrame = new JFrame();
@@ -306,6 +327,7 @@ public class AESKryptoController implements Initializable {
                         ciphertext_file_content = Files.readAllBytes(selectedFile.toPath());
                         // HexFormat hex = HexFormat.of();
                         // ciphertext_textarea.setText(hex.formatHex(readData));
+                        ciphertext_textarea.setText("Loaded text from file " + selectedFile);
                         File file = new File("src/main/resources/org.krypto/file_upload.png");
                         Image image = new Image(file.toURI().toString());
                         file_indicator_save_ciphertext.setImage(image);
