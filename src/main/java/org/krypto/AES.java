@@ -163,13 +163,6 @@ public class AES implements Cipher {
     }
 
     private byte[] encryptShiftRows(byte[] block) {
-//          0  1  2  3
-//          4  5  6  7
-//          8  9 10 11
-//         12 13 14 15
-//         Ignore row 0
-//         Shift row 1 by 1
-
         //  0  4  8 12
         //  1  5  9 13
         //  2  6 10 14
@@ -189,24 +182,28 @@ public class AES implements Cipher {
         block[6] = block[14];
         block[14] = tmp;
         // Shift row 3 by 3
-
         //TODO: finish
-        tmp = block[12];
-        block[12] = block[15];
-        block[15] = block[14];
-        block[14] = block[13];
-        block[13] = tmp;
-        return new byte[0];
+        tmp = block[3];
+        block[3] = block[15];
+        block[15] = block[11];
+        block[11] = block[7];
+        block[7] = tmp;
+        return block;
     }
 
     private byte[] encryptMixColumns(byte[] block) {
         // TODO: it's now broken
+
+        //  0  4  8 12
+        //  1  5  9 13
+        //  2  6 10 14
+        //  3  7 11 15
         byte[] new_block = new byte[16];
         for(int i =0; i<4;i++) {
-            new_block[i] = (byte) (funniMultiply(block[i], GalloisMultiplyBy2_table) ^ funniMultiply(block[4+i], GalloisMultiplyBy3_table) ^ block[8+i] ^ block[12+i]);
-            new_block[4+i] = (byte) (block[i] ^ funniMultiply(block[4+i], GalloisMultiplyBy2_table) ^ funniMultiply(block[8+i], GalloisMultiplyBy3_table) ^ block[12+i]);
-            new_block[8+i] = (byte) (block[i] ^ block[4+i] ^ funniMultiply(block[8+i],GalloisMultiplyBy2_table) ^ funniMultiply(block[12+i],GalloisMultiplyBy3_table));
-            new_block[12+i] = (byte) (funniMultiply(block[i], GalloisMultiplyBy3_table) ^ block[4+i] ^ block[8+i] ^ funniMultiply(block[12+i], GalloisMultiplyBy2_table));
+            new_block[4*i] =   (byte) (funniMultiply(block[4*i], GalloisMultiplyBy2_table) ^ funniMultiply(block[4*i+1], GalloisMultiplyBy3_table) ^ block[4*i+2] ^ block[4*i+3]);
+            new_block[4*i+1] = (byte) (block[4*i] ^ funniMultiply(block[4*i+1], GalloisMultiplyBy2_table) ^ funniMultiply(block[4*i+2], GalloisMultiplyBy3_table) ^ block[4*i+3]);
+            new_block[4*i+2] = (byte) (block[4*i] ^ block[4*i+1] ^ funniMultiply(block[4*i+2],GalloisMultiplyBy2_table) ^ funniMultiply(block[4*i+3],GalloisMultiplyBy3_table));
+            new_block[4*i+3] = (byte) (funniMultiply(block[4*i+1], GalloisMultiplyBy3_table) ^ block[4+i] ^ block[4*i+2] ^ funniMultiply(block[4*i+3], GalloisMultiplyBy2_table));
         }
         return new_block;
     }
