@@ -27,6 +27,10 @@ import java.util.ResourceBundle;
 public class AESKryptoController implements Initializable {
     private static final String ENCRYPTED_FILE_EXT = "aescrypt";
 
+    // TODO: add null checks to all "save" functions
+    private byte[] plaintext_file_content;
+    private byte[] ciphertext_file_content;
+
     @FXML
     private Button key_read_button;
     @FXML
@@ -53,6 +57,14 @@ public class AESKryptoController implements Initializable {
 
     @FXML
     private javafx.scene.image.ImageView key_length_display;
+    @FXML
+    private javafx.scene.image.ImageView file_indicator_read_plaintext;
+    @FXML
+    private javafx.scene.image.ImageView file_indicator_save_plaintext;
+    @FXML
+    private javafx.scene.image.ImageView file_indicator_read_ciphertext;
+    @FXML
+    private javafx.scene.image.ImageView file_indicator_save_ciphertext;
 
     private void setKeyLength(int value) {
         File file;
@@ -181,11 +193,11 @@ public class AESKryptoController implements Initializable {
                     fileToSave = new File(fileToSave + ".txt");
                     fileToSave = new File(fileToSave.getParentFile(), FilenameUtils.getBaseName(fileToSave.getName()) + ".txt");
                 }
-                byte[] plaintext_bytes = plaintext_textarea.getText().getBytes();
+                // byte[] plaintext_bytes = plaintext_textarea.getText().getBytes();
 
                 try {
                     try (FileOutputStream outputStream = new FileOutputStream(fileToSave)) {
-                        outputStream.write(plaintext_bytes);
+                        outputStream.write(plaintext_file_content);
                         Alert alert = new Alert(Alert.AlertType.INFORMATION,
                                 "PLAINTEXT FILE SAVED CORRECTLY", ButtonType.APPLY);
                         alert.show();
@@ -197,6 +209,9 @@ public class AESKryptoController implements Initializable {
                     throw new RuntimeException(e);
 
                 }
+                File file = new File("src/main/resources/org.krypto/file_empty.png");
+                Image image = new Image(file.toURI().toString());
+                file_indicator_save_plaintext.setImage(image);
                 System.out.println("Save as file: " + fileToSave.getAbsolutePath());
             }
         });
@@ -214,9 +229,14 @@ public class AESKryptoController implements Initializable {
                 // TODO: unnecessary check (we can handle any file type (KARBO SPIIIIIIN)
                 if (FilenameUtils.getExtension(selectedFile.getName()).equalsIgnoreCase("txt")) {
                     try {
-                        String readData = Files.readString(selectedFile.toPath());
-                        // TODO: textareas should contain hex encoded data
-                        plaintext_textarea.setText(readData);
+                        plaintext_file_content = Files.readAllBytes(selectedFile.toPath());
+                        // String readData = Files.readString(selectedFile.toPath());
+                        // plaintext_textarea.setText(readData);
+                        plaintext_textarea.setText("Loaded text from file " + selectedFile);
+                        File file = new File("src/main/resources/org.krypto/file_upload.png");
+                        Image image = new Image(file.toURI().toString());
+                        file_indicator_read_plaintext.setImage(image);
+
                         Alert alert = new Alert(Alert.AlertType.INFORMATION,
                                 "FILE LOADED PROPERLY", ButtonType.APPLY);
                         alert.show();
@@ -247,11 +267,12 @@ public class AESKryptoController implements Initializable {
                     fileToSave = new File(fileToSave + "." + ENCRYPTED_FILE_EXT);
                     fileToSave = new File(fileToSave.getParentFile(), FilenameUtils.getBaseName(fileToSave.getName()) + "." + ENCRYPTED_FILE_EXT);
                 }
-                byte[] encrypted_bytes = HexFormat.of().parseHex(ciphertext_textarea.getText());
+                // byte[] encrypted_bytes = HexFormat.of().parseHex(ciphertext_textarea.getText());
 
                 try {
                     try (FileOutputStream outputStream = new FileOutputStream(fileToSave)) {
-                        outputStream.write(encrypted_bytes);
+                        outputStream.write(ciphertext_file_content);
+
                         Alert alert = new Alert(Alert.AlertType.INFORMATION,
                                 "ENCRYPTED FILE SAVED CORRECTLY", ButtonType.APPLY);
                         alert.show();
@@ -263,6 +284,9 @@ public class AESKryptoController implements Initializable {
                     throw new RuntimeException(e);
 
                 }
+                File file = new File("src/main/resources/org.krypto/file_empty.png");
+                Image image = new Image(file.toURI().toString());
+                file_indicator_save_ciphertext.setImage(image);
                 System.out.println("File saved as: " + fileToSave.getAbsolutePath());
             }
         });
@@ -279,9 +303,12 @@ public class AESKryptoController implements Initializable {
                 File selectedFile = fileChooser.getSelectedFile();
                 if (FilenameUtils.getExtension(selectedFile.getName()).equalsIgnoreCase(ENCRYPTED_FILE_EXT)) {
                     try {
-                        byte[] readData = Files.readAllBytes(selectedFile.toPath());
-                        HexFormat hex = HexFormat.of();
-                        ciphertext_textarea.setText(hex.formatHex(readData));
+                        ciphertext_file_content = Files.readAllBytes(selectedFile.toPath());
+                        // HexFormat hex = HexFormat.of();
+                        // ciphertext_textarea.setText(hex.formatHex(readData));
+                        File file = new File("src/main/resources/org.krypto/file_upload.png");
+                        Image image = new Image(file.toURI().toString());
+                        file_indicator_save_ciphertext.setImage(image);
                         Alert alert = new Alert(Alert.AlertType.INFORMATION,
                                 "ENCRYPTED FILE LOADED PROPERLY", ButtonType.APPLY);
                         alert.show();
