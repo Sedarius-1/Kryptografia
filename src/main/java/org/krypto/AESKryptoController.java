@@ -55,6 +55,10 @@ public class AESKryptoController implements Initializable {
     @FXML
     private Button save_ciphertext_button;
 
+    @FXML
+    private Button encrypt;
+    @FXML
+    private Button decrypt;
 
     @FXML
     private javafx.scene.image.ImageView key_length_display;
@@ -66,6 +70,9 @@ public class AESKryptoController implements Initializable {
     private javafx.scene.image.ImageView file_indicator_read_ciphertext;
     @FXML
     private javafx.scene.image.ImageView file_indicator_save_ciphertext;
+    @FXML
+    private javafx.scene.image.ImageView file_indicator_crypt;
+
 
     private void setKeyLength(int value) {
         File file;
@@ -89,6 +96,18 @@ public class AESKryptoController implements Initializable {
                 key_length_display.setImage(image);
                 key_length_display.setFitWidth(460);
             }
+        }
+    }
+
+    private void setIcon(String place, String icon) {
+        File file = new File("src/main/resources/org.krypto/file_" + icon + ".png");
+        Image image = new Image(file.toURI().toString());
+        switch (place) {
+            case "plain_read" -> file_indicator_read_plaintext.setImage(image);
+            case "plain_save" -> file_indicator_save_plaintext.setImage(image);
+            case "cipher_read" -> file_indicator_read_ciphertext.setImage(image);
+            case "cipher_save" -> file_indicator_save_ciphertext.setImage(image);
+            case "crypt" -> file_indicator_crypt.setImage(image);
         }
     }
 
@@ -180,22 +199,14 @@ public class AESKryptoController implements Initializable {
 
         plaintext_textarea.textProperty().addListener((obs, old, niu) -> {
             plaintext_file_content = plaintext_textarea.getText().getBytes(StandardCharsets.UTF_8);
-            File file = new File("src/main/resources/org.krypto/file_empty.png");
-            Image image = new Image(file.toURI().toString());
-            file_indicator_read_plaintext.setImage(image);
-            file = new File("src/main/resources/org.krypto/file_checked.png");
-            image = new Image(file.toURI().toString());
-            file_indicator_save_plaintext.setImage(image);
+            setIcon("plain_read", "empty");
+            setIcon("plain_save", "checked");
         });
 
         ciphertext_textarea.textProperty().addListener((obs, old, niu) -> {
             ciphertext_file_content = HexFormat.of().parseHex(ciphertext_textarea.getText());
-            File file = new File("src/main/resources/org.krypto/file_empty.png");
-            Image image = new Image(file.toURI().toString());
-            file_indicator_read_ciphertext.setImage(image);
-            file = new File("src/main/resources/org.krypto/file_checked.png");
-            image = new Image(file.toURI().toString());
-            file_indicator_save_ciphertext.setImage(image);
+            setIcon("cipher_read", "empty");
+            setIcon("cipher_save", "checked");
         });
 
         // Save plaintext to file
@@ -230,9 +241,8 @@ public class AESKryptoController implements Initializable {
                     throw new RuntimeException(e);
 
                 }
-                File file = new File("src/main/resources/org.krypto/file_empty.png");
-                Image image = new Image(file.toURI().toString());
-                file_indicator_save_plaintext.setImage(image);
+                setIcon("plain_save", "empty");
+                plaintext_textarea.setText("");
                 System.out.println("Save as file: " + fileToSave.getAbsolutePath());
             }
         });
@@ -254,9 +264,7 @@ public class AESKryptoController implements Initializable {
                         // String readData = Files.readString(selectedFile.toPath());
                         // plaintext_textarea.setText(readData);
                         plaintext_textarea.setText("Loaded text from file " + selectedFile);
-                        File file = new File("src/main/resources/org.krypto/file_upload.png");
-                        Image image = new Image(file.toURI().toString());
-                        file_indicator_read_plaintext.setImage(image);
+                        setIcon("plain_read", "upload");
 
                         Alert alert = new Alert(Alert.AlertType.INFORMATION,
                                 "FILE LOADED PROPERLY", ButtonType.APPLY);
@@ -305,9 +313,8 @@ public class AESKryptoController implements Initializable {
                     throw new RuntimeException(e);
 
                 }
-                File file = new File("src/main/resources/org.krypto/file_empty.png");
-                Image image = new Image(file.toURI().toString());
-                file_indicator_save_ciphertext.setImage(image);
+                setIcon("cipher_save", "empty");
+                ciphertext_textarea.setText("");
                 System.out.println("File saved as: " + fileToSave.getAbsolutePath());
             }
         });
@@ -328,9 +335,7 @@ public class AESKryptoController implements Initializable {
                         // HexFormat hex = HexFormat.of();
                         // ciphertext_textarea.setText(hex.formatHex(readData));
                         ciphertext_textarea.setText("Loaded text from file " + selectedFile);
-                        File file = new File("src/main/resources/org.krypto/file_upload.png");
-                        Image image = new Image(file.toURI().toString());
-                        file_indicator_save_ciphertext.setImage(image);
+                        setIcon("cipher_save", "upload");
                         Alert alert = new Alert(Alert.AlertType.INFORMATION,
                                 "ENCRYPTED FILE LOADED PROPERLY", ButtonType.APPLY);
                         alert.show();
@@ -343,6 +348,30 @@ public class AESKryptoController implements Initializable {
                     alert.show();
                 }
             }
+        });
+
+        encrypt.setOnAction(ActionEvent -> {
+            setIcon("crypt", "scan");
+
+            AES aes = new AES(HexFormat.of().parseHex(key_text_field.getText()));
+            ciphertext_file_content = aes.encryptData(plaintext_file_content);
+
+            ciphertext_textarea.setText(HexFormat.of().formatHex(ciphertext_file_content));
+
+            setIcon("cipher_save", "download");
+            setIcon("crypt", "done");
+        });
+
+        decrypt.setOnAction(ActionEvent -> {
+            setIcon("crypt", "scan");
+
+            AES aes = new AES(HexFormat.of().parseHex(key_text_field.getText()));
+            plaintext_file_content = aes.decryptData(ciphertext_file_content);
+
+            plaintext_textarea.setText(new String(plaintext_file_content, StandardCharsets.UTF_8));
+
+            setIcon("cipher_save", "download");
+            setIcon("crypt", "done");
         });
     }
 
