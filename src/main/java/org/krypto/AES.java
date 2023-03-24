@@ -1,17 +1,14 @@
 package org.krypto;
 
+import java.util.HexFormat;
+
 public class AES implements Cipher {
     private byte[] key;
 
     private byte[] sub_keys;
 
-
-//    private byte[] SubBox;
-//    private byte[] DomBox;
-
     public AES(byte[] key) {
         this.key = key;
-        initSBoxes();
     }
 
     @Override
@@ -19,8 +16,8 @@ public class AES implements Cipher {
         this.key = key;
     }
 
-    private byte funniMultiply(byte value, byte[] lookup) {
-        return lookup[(int) value];
+    private byte GalloisMultiply(byte value, byte[] lookup) {
+        return lookup[(int) value & 0xff];
     }
 
     private void debugPrintBlock(byte[] block) {
@@ -31,24 +28,15 @@ public class AES implements Cipher {
         System.out.println(sb);
     }
 
-    private void initSBoxes() {
-        // https://en.wikipedia.org/wiki/Rijndael_S-box
-        // SubBox - forward
-        // DomBox - inverse
-        // TODO
-
-        System.out.println("TODO: AES:initSBoxes");
-    }
-
     private byte[] rcon(int number) {
         return new byte[]{LookupTables.rcon_table[number - 1], 0, 0, 0};
     }
 
     private byte[] SubWord(byte[] word) {
-        return new byte[]{(byte) LookupTables.SBox[word[0]],
-                (byte) LookupTables.SBox[word[1]],
-                (byte) LookupTables.SBox[word[2]],
-                (byte) LookupTables.SBox[word[3]]};
+        return new byte[]{(byte) LookupTables.SBox[word[0] & 0xff],
+                (byte) LookupTables.SBox[word[1] & 0xff],
+                (byte) LookupTables.SBox[word[2] & 0xff],
+                (byte) LookupTables.SBox[word[3] & 0xff]};
     }
 
     private byte[] RotWord(byte[] word) {
@@ -72,7 +60,7 @@ public class AES implements Cipher {
         return padded_data;
     }
 
-    public void encryptInitSubKeys(int round_count) {
+    public void oldencryptInitSubKeys(int round_count) {
         // https://en.wikipedia.org/wiki/AES_key_schedule
         sub_keys = new byte[16 * round_count];
         int N = key.length / 4;
@@ -117,6 +105,73 @@ public class AES implements Cipher {
         }
     }
 
+    public void encryptInitSubKeys(int round_count) {
+        int current_sub_keys_length = 0;
+        sub_keys = new byte[16 * round_count];
+        System.arraycopy(key, 0, sub_keys, 0, key.length);
+        current_sub_keys_length = key.length;
+        int iter = 1;
+        while(current_sub_keys_length<round_count*16){
+            //1.1
+            byte[] temp = new byte[4];
+            System.arraycopy(sub_keys, current_sub_keys_length - 4, temp, 0, 4);
+            //1.2
+            temp = RotWord(temp);
+            //1.3
+            temp = SubWord(temp);
+            //1.4
+            temp = XORWord(temp, rcon(iter));
+            iter++;
+            //1.5
+            byte[] in = new byte[4];
+            System.arraycopy(sub_keys, current_sub_keys_length - key.length, in, 0, 4);
+            temp = XORWord(temp, in);
+            System.arraycopy(temp, 0, sub_keys, current_sub_keys_length, 4);
+            current_sub_keys_length += 4;
+
+            for (int i = 0; i < 3; i++) {
+                //2.1
+                System.arraycopy(sub_keys, current_sub_keys_length - 4, temp, 0, 4);
+                //2.2
+                System.arraycopy(sub_keys, current_sub_keys_length - key.length, in, 0, 4);
+                temp = XORWord(temp, in);
+                System.arraycopy(temp, 0, sub_keys, current_sub_keys_length, 4);
+                current_sub_keys_length += 4;
+            }
+
+            if (key.length * 8 == 256) {
+                //3.1
+                System.arraycopy(sub_keys, current_sub_keys_length - 4, temp, 0, 4);
+                //3.2
+                temp = SubWord(temp);
+                //3.3
+                System.arraycopy(sub_keys, current_sub_keys_length - key.length, in, 0, 4);
+                temp = XORWord(temp, in);
+                System.arraycopy(temp, 0, sub_keys, current_sub_keys_length, 4);
+                current_sub_keys_length += 4;
+            }
+
+            int imax = 0;
+            switch (key.length) {
+                case 128/8 -> imax = 0;
+                case 192/8 -> imax = 2;
+                case 256/8 -> imax = 3;
+            }
+
+            for (int i = 0; i < imax; i++) {
+                //4.1
+                System.arraycopy(sub_keys, current_sub_keys_length - 4, temp, 0, 4);
+                //4.2
+                System.arraycopy(sub_keys, current_sub_keys_length - key.length, in, 0, 4);
+                temp = XORWord(temp, in);
+                System.arraycopy(temp, 0, sub_keys, current_sub_keys_length, 4);
+                current_sub_keys_length += 4;
+
+            }
+
+        }
+    }
+
     private byte[] encryptGetRoundKey(int round_number) {
         byte[] sub_key = new byte[16];
         System.arraycopy(sub_keys, round_number * 16, sub_key, 0, 16);
@@ -124,7 +179,7 @@ public class AES implements Cipher {
     }
 
     private byte[] encryptSubBytes(byte[] block) {
-        for (int i = 0; i < 16; i++) block[i] = (byte) LookupTables.SBox[block[i]];
+        for (int i = 0; i < 16; i++) block[i] = (byte) LookupTables.SBox[block[i] & 0xff];
         return block;
     }
 
@@ -148,7 +203,6 @@ public class AES implements Cipher {
         block[6] = block[14];
         block[14] = tmp;
         // Shift row 3 by 3
-        //TODO: finish
         tmp = block[3];
         block[3] = block[15];
         block[15] = block[11];
@@ -158,18 +212,16 @@ public class AES implements Cipher {
     }
 
     private byte[] encryptMixColumns(byte[] block) {
-        // TODO: it's now broken
-
         //  0  4  8 12
         //  1  5  9 13
         //  2  6 10 14
         //  3  7 11 15
         byte[] new_block = new byte[16];
         for (int i = 0; i < 4; i++) {
-            new_block[4 * i] = (byte) (funniMultiply(block[4 * i], LookupTables.GalloisMultiplyBy2_table) ^ funniMultiply(block[4 * i + 1], LookupTables.GalloisMultiplyBy3_table) ^ block[4 * i + 2] ^ block[4 * i + 3]);
-            new_block[4 * i + 1] = (byte) (block[4 * i] ^ funniMultiply(block[4 * i + 1], LookupTables.GalloisMultiplyBy2_table) ^ funniMultiply(block[4 * i + 2], LookupTables.GalloisMultiplyBy3_table) ^ block[4 * i + 3]);
-            new_block[4 * i + 2] = (byte) (block[4 * i] ^ block[4 * i + 1] ^ funniMultiply(block[4 * i + 2], LookupTables.GalloisMultiplyBy2_table) ^ funniMultiply(block[4 * i + 3], LookupTables.GalloisMultiplyBy3_table));
-            new_block[4 * i + 3] = (byte) (funniMultiply(block[4 * i + 1], LookupTables.GalloisMultiplyBy3_table) ^ block[4 + i] ^ block[4 * i + 2] ^ funniMultiply(block[4 * i + 3], LookupTables.GalloisMultiplyBy2_table));
+            new_block[4 * i] = (byte) (GalloisMultiply(block[4 * i], LookupTables.GalloisMultiplyBy2_table) ^ GalloisMultiply(block[4 * i + 1], LookupTables.GalloisMultiplyBy3_table) ^ block[4 * i + 2] ^ block[4 * i + 3]);
+            new_block[4 * i + 1] = (byte) (block[4 * i] ^ GalloisMultiply(block[4 * i + 1], LookupTables.GalloisMultiplyBy2_table) ^ GalloisMultiply(block[4 * i + 2], LookupTables.GalloisMultiplyBy3_table) ^ block[4 * i + 3]);
+            new_block[4 * i + 2] = (byte) (block[4 * i] ^ block[4 * i + 1] ^ GalloisMultiply(block[4 * i + 2], LookupTables.GalloisMultiplyBy2_table) ^ GalloisMultiply(block[4 * i + 3], LookupTables.GalloisMultiplyBy3_table));
+            new_block[4 * i + 3] = (byte) (GalloisMultiply(block[4 * i], LookupTables.GalloisMultiplyBy3_table) ^ block[4 * i + 1] ^ block[4 * i + 2] ^ GalloisMultiply(block[4 * i + 3], LookupTables.GalloisMultiplyBy2_table));
         }
         return new_block;
     }
@@ -188,28 +240,29 @@ public class AES implements Cipher {
         byte[] padded_plaintext = pad(plaintext);
         int round_count;
         switch (key.length) {
-            case 128 -> round_count = 10;
-            case 192 -> round_count = 12;
-            case 256 -> round_count = 14;
+            case 128/8 -> round_count = 10;
+            case 192/8 -> round_count = 12;
+            case 256/8 -> round_count = 14;
             default -> {
                 System.out.println("AES:encryptData: INVALID KEY LENGTH!");
                 return null;
             }
         }
 
-        encryptInitSubKeys(round_count);
-
+        encryptInitSubKeys(round_count+1);
+        System.out.println(HexFormat.of().formatHex(sub_keys));
         byte[] ciphertext = new byte[padded_plaintext.length];
         // encrypt block
-        // https://en.wikipedia.org/wiki/Advanced_Encryption_Standard
         for (int block_start_index = 0; block_start_index < plaintext.length; block_start_index += 16) {
             byte[] block = new byte[16];
             // take one block
             System.arraycopy(padded_plaintext, block_start_index, block, 0, 16);
-
+            byte[] round_key = new byte[16];
+            System.arraycopy(sub_keys,0,round_key,0,16);
+            block = encryptAddRoundKey(block, round_key);
             // n-1 rounds (R0 - R(n-2)
-            byte[] round_key;
-            for (int round_number = 0; round_number < round_count - 1; round_number++) {
+
+            for (int round_number = 1; round_number < round_count; round_number++) {
                 round_key = encryptGetRoundKey(round_number);
                 block = encryptSubBytes(block);
                 block = encryptShiftRows(block);
@@ -218,7 +271,7 @@ public class AES implements Cipher {
             }
 
             // last "special" round (R(n-1))
-            round_key = encryptGetRoundKey(round_count - 1);
+            round_key = encryptGetRoundKey(round_count);
             block = encryptSubBytes(block);
             block = encryptShiftRows(block);
             block = encryptAddRoundKey(block, round_key);
@@ -271,9 +324,9 @@ public class AES implements Cipher {
     public byte[] decryptData(byte[] ciphertext) {
         int round_count;
         switch (key.length) {
-            case 128 -> round_count = 10;
-            case 192 -> round_count = 12;
-            case 256 -> round_count = 14;
+            case 128/8 -> round_count = 10;
+            case 192/8 -> round_count = 12;
+            case 256/8 -> round_count = 14;
             default -> {
                 System.out.println("AES:decryptData: INVALID KEY LENGTH!");
                 return null;
