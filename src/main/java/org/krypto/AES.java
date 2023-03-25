@@ -56,7 +56,9 @@ public class AES implements Cipher {
         pad_length = 16 - (data.length % 16);
         byte[] padded_data = new byte[data.length + pad_length];
         System.arraycopy(data, 0, padded_data, 0, data.length);
-        padded_data[padded_data.length - 1] = Byte.parseByte(Integer.toString(pad_length));
+        for(int i =data.length;i<padded_data.length;i++){
+            padded_data[i] = Byte.parseByte(Integer.toString(pad_length));
+        }
         return padded_data;
     }
 
@@ -115,6 +117,9 @@ public class AES implements Cipher {
             //1.1
             byte[] temp = new byte[4];
             System.arraycopy(sub_keys, current_sub_keys_length - 4, temp, 0, 4);
+            if(current_sub_keys_length==round_count*16) {
+                break;
+            }
             //1.2
             temp = RotWord(temp);
             //1.3
@@ -132,6 +137,9 @@ public class AES implements Cipher {
             for (int i = 0; i < 3; i++) {
                 //2.1
                 System.arraycopy(sub_keys, current_sub_keys_length - 4, temp, 0, 4);
+                if(current_sub_keys_length==round_count*16){
+                    break;
+                }
                 //2.2
                 System.arraycopy(sub_keys, current_sub_keys_length - key.length, in, 0, 4);
                 temp = XORWord(temp, in);
@@ -142,6 +150,9 @@ public class AES implements Cipher {
             if (key.length * 8 == 256) {
                 //3.1
                 System.arraycopy(sub_keys, current_sub_keys_length - 4, temp, 0, 4);
+                if(current_sub_keys_length==round_count*16){
+                    break;
+                }
                 //3.2
                 temp = SubWord(temp);
                 //3.3
@@ -161,6 +172,9 @@ public class AES implements Cipher {
             for (int i = 0; i < imax; i++) {
                 //4.1
                 System.arraycopy(sub_keys, current_sub_keys_length - 4, temp, 0, 4);
+                if(current_sub_keys_length==round_count*16){
+                    break;
+                }
                 //4.2
                 System.arraycopy(sub_keys, current_sub_keys_length - key.length, in, 0, 4);
                 temp = XORWord(temp, in);
