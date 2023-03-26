@@ -8,16 +8,26 @@ public class AES implements Cipher {
     private byte[] sub_keys;
 
     public AES(byte[] key) {
-        this.key = key;
+        setKey(key);
     }
 
     @Override
     public void setKey(byte[] key) {
         this.key = key;
+        int round_count = 10;
+        switch (key.length) {
+            case 128 / 8 -> round_count = 10;
+            case 192 / 8 -> round_count = 12;
+            case 256 / 8 -> round_count = 14;
+            default -> {
+                System.out.println("AES:setKey: INVALID KEY LENGTH!");
+            }
+        }
+        encryptInitSubKeys(round_count + 1);
     }
 
-    private byte GalloisMultiply(byte value, byte[] lookup) {
-        return lookup[(int) value & 0xff];
+    private byte GalloisMultiply(byte value, int[] lookup) {
+        return (byte) lookup[(int) value & 0xff];
     }
 
     private void debugPrintBlock(byte[] block) {
@@ -218,8 +228,6 @@ public class AES implements Cipher {
             }
         }
 
-        encryptInitSubKeys(round_count + 1);
-        System.out.println(HexFormat.of().formatHex(sub_keys));
         byte[] ciphertext = new byte[padded_plaintext.length];
         // encrypt block
         for (int block_start_index = 0; block_start_index < plaintext.length; block_start_index += 16) {
@@ -227,7 +235,7 @@ public class AES implements Cipher {
             // take one block
             System.arraycopy(padded_plaintext, block_start_index, block, 0, 16);
             byte[] round_key = new byte[16];
-            System.arraycopy(sub_keys, 0, round_key, 0, 16);
+            round_key = encryptGetRoundKey(0);
             block = encryptAddRoundKey(block, round_key);
             // n-1 rounds (R0 - R(n-2)
 
@@ -254,39 +262,88 @@ public class AES implements Cipher {
 
     // DECRYPTION:
 
-    private byte[] unpad(byte[] plaintext) {
-        // TODO
-        System.out.println("TODO: AES:unpad");
-        return new byte[0];
+    private byte[] unpad(byte[] padded_data) {
+        int pad_length;
+        pad_length = padded_data[padded_data.length - 1];
+        byte[] unpadded_data = new byte[padded_data.length - pad_length];
+        System.arraycopy(padded_data, 0, unpadded_data, 0, unpadded_data.length);
+        return unpadded_data;
     }
 
     private byte[] decryptGetRoundKey(int round_number) {
-        // TODO
-        System.out.println("TODO: AES:decryptGetRoundKey");
-        return new byte[0];
+        byte[] round_key = new byte[16];
+        int total_rounds = sub_keys.length / 16;
+        System.arraycopy(sub_keys, (total_rounds - 1 - round_number) * 16, round_key, 0, 16);
+        return round_key;
     }
 
     private byte[] decryptAddRoundKey(byte[] block, byte[] round_key) {
-        // TODO
-        System.out.println("TODO: AES:decryptAddRoundKey");
-        return new byte[0];
+        for (int i = 0; i < 16; i++) {
+            block[i] = (byte) (block[i] ^ round_key[i]);
+        }
+        return block;
     }
 
     private byte[] decryptMixColumns(byte[] block) {
-        // TODO
-        System.out.println("TODO: AES:decryptMixColumns");
-        return new byte[0];
+        // Mix colums matrix for decryptin be like:
+        // e b d 9 -  14 11 13  9
+        // 9 e b d -   9 14 11 13
+        // d 9 e b -  13  9 14 11
+        // d b 9 e -  11 13  9 14
+        byte[] new_block = new byte[16];
+        for (int i = 0; i < 4; i++) {
+            new_block[4 * i] = (byte) (GalloisMultiply(block[4 * i], LookupTables.GalloisMultiplyBy14_table) ^
+                    GalloisMultiply(block[4 * i + 1], LookupTables.GalloisMultiplyBy11_table) ^
+                    GalloisMultiply(block[4 * i + 2], LookupTables.GalloisMultiplyBy13_table) ^
+                    GalloisMultiply(block[4 * i + 3], LookupTables.GalloisMultiplyBy9_table));
+            new_block[4 * i + 1] = (byte) (GalloisMultiply(block[4 * i], LookupTables.GalloisMultiplyBy9_table) ^
+                    GalloisMultiply(block[4 * i + 1], LookupTables.GalloisMultiplyBy14_table) ^
+                    GalloisMultiply(block[4 * i + 2], LookupTables.GalloisMultiplyBy11_table) ^
+                    GalloisMultiply(block[4 * i + 3], LookupTables.GalloisMultiplyBy13_table));
+            new_block[4 * i + 2] = (byte) (GalloisMultiply(block[4 * i], LookupTables.GalloisMultiplyBy13_table) ^
+                    GalloisMultiply(block[4 * i + 1], LookupTables.GalloisMultiplyBy9_table) ^
+                    GalloisMultiply(block[4 * i + 2], LookupTables.GalloisMultiplyBy14_table) ^
+                    GalloisMultiply(block[4 * i + 3], LookupTables.GalloisMultiplyBy11_table));
+            new_block[4 * i + 3] = (byte) (GalloisMultiply(block[4 * i], LookupTables.GalloisMultiplyBy11_table) ^
+                    GalloisMultiply(block[4 * i + 1], LookupTables.GalloisMultiplyBy13_table) ^
+                    GalloisMultiply(block[4 * i + 2], LookupTables.GalloisMultiplyBy9_table) ^
+                    GalloisMultiply(block[4 * i + 3], LookupTables.GalloisMultiplyBy14_table));
+        }
+        return new_block;
     }
 
     private byte[] decryptShiftRows(byte[] block) {
-        System.out.println("TODO: AES:decryptShiftRows");
-        return new byte[0];
+        //  0  4  8 12
+        //  1  5  9 13
+        //  2  6 10 14
+        //  3  7 11 15
+        // Ignore row 0
+        // Shift row 1 by 1
+        byte tmp = block[13];
+        block[13] = block[9];
+        block[9] = block[5];
+        block[5] = block[1];
+        block[1] = tmp;
+        // Shift row 2 by 2
+        tmp = block[10];
+        block[10] = block[2];
+        block[2] = tmp;
+        tmp = block[6];
+        block[6] = block[14];
+        block[14] = tmp;
+        // Shift row 3 by 3
+        tmp = block[15];
+        block[15] = block[3];
+        block[3] = block[7];
+        block[7] = block[11];
+        block[11] = tmp;
+        return block;
     }
 
+
     private byte[] decryptSubBytes(byte[] block) {
-        // TODO
-        System.out.println("TODO: AES:decryptSubBytes");
-        return new byte[0];
+        for (int i = 0; i < 16; i++) block[i] = (byte) LookupTables.inverseSBox[block[i] & 0xff];
+        return block;
     }
 
     @Override
@@ -302,8 +359,6 @@ public class AES implements Cipher {
             }
         }
 
-        // TODO: I don't know if any of this is correct
-
         byte[] plaintext = new byte[ciphertext.length];
         // decrypt block
         for (int block_start_index = 0; block_start_index < ciphertext.length; block_start_index += 16) {
@@ -311,25 +366,28 @@ public class AES implements Cipher {
             // take one block
             System.arraycopy(ciphertext, block_start_index, block, 0, 16);
 
-            // first "special" round (R(n-1))
             byte[] round_key;
-            round_key = decryptGetRoundKey(round_count - 1);
-            block = decryptAddRoundKey(block, round_key);
-            block = decryptShiftRows(block);
-            block = decryptSubBytes(block);
 
-            // n-1 rounds (R0 - R(n-2)
-            for (int round_number = round_count - 2; round_number >= 0; round_number--) {
+            // first "special" round (R0)
+            round_key = decryptGetRoundKey(0);
+            block = decryptAddRoundKey(block, round_key);
+
+            // n-1 rounds (R1 - R(n-1)
+            for (int round_number = 1; round_number < round_count; round_number++) {
                 round_key = decryptGetRoundKey(round_number);
-                block = decryptAddRoundKey(block, round_key);
-                block = decryptMixColumns(block);
                 block = decryptShiftRows(block);
                 block = decryptSubBytes(block);
+                block = decryptAddRoundKey(block, round_key);
+                block = decryptMixColumns(block);
             }
 
+            round_key = decryptGetRoundKey(round_count);
+            block = decryptShiftRows(block);
+            block = decryptSubBytes(block);
+            block = decryptAddRoundKey(block, round_key);
 
             // add block to output
-            System.arraycopy(block, 0, ciphertext, block_start_index, 16);
+            System.arraycopy(block, 0, plaintext, block_start_index, 16);
         }
 
         return unpad(plaintext);
