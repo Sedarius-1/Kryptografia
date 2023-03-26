@@ -56,55 +56,10 @@ public class AES implements Cipher {
         pad_length = 16 - (data.length % 16);
         byte[] padded_data = new byte[data.length + pad_length];
         System.arraycopy(data, 0, padded_data, 0, data.length);
-        for(int i =data.length;i<padded_data.length;i++){
+        for (int i = data.length; i < padded_data.length; i++) {
             padded_data[i] = Byte.parseByte(Integer.toString(pad_length));
         }
         return padded_data;
-    }
-
-    public void oldencryptInitSubKeys(int round_count) {
-        // https://en.wikipedia.org/wiki/AES_key_schedule
-        sub_keys = new byte[16 * round_count];
-        int N = key.length / 4;
-        for (int i = 0; i < 4 * round_count; i += 4) {
-            if (i < N) {
-                System.arraycopy(key, i, sub_keys, i, 4);
-                continue;
-            } else if (i >= N && i % N == 0) {
-                byte[] Win = new byte[4];
-                System.arraycopy(sub_keys, i - (N * 4), Win, 0, 4);
-                byte[] Wi1 = new byte[4];
-                System.arraycopy(sub_keys, i - 4, Wi1, 0, 4);
-
-                byte[] Wi;
-                Wi = XORWord(XORWord(Win, SubWord(RotWord(Wi1))), rcon(i / N));
-
-                System.arraycopy(Wi, 0, sub_keys, i, 4);
-                continue;
-            } else if (i >= N && N > 6 && i % N == 4) {
-                byte[] Win = new byte[4];
-                System.arraycopy(sub_keys, i - (N * 4), Win, 0, 4);
-                byte[] Wi1 = new byte[4];
-                System.arraycopy(sub_keys, i - 4, Wi1, 0, 4);
-
-                byte[] Wi;
-                Wi = XORWord(Win, SubWord(Wi1));
-
-                System.arraycopy(Wi, 0, sub_keys, i, 4);
-                continue;
-            } else {
-                byte[] Win = new byte[4];
-                System.arraycopy(sub_keys, i - (N * 4), Win, 0, 4);
-                byte[] Wi1 = new byte[4];
-                System.arraycopy(sub_keys, i - 4, Wi1, 0, 4);
-
-                byte[] Wi;
-                Wi = XORWord(Win, Wi1);
-
-                System.arraycopy(Wi, 0, sub_keys, i, 4);
-                continue;
-            }
-        }
     }
 
     public void encryptInitSubKeys(int round_count) {
@@ -113,11 +68,11 @@ public class AES implements Cipher {
         System.arraycopy(key, 0, sub_keys, 0, key.length);
         current_sub_keys_length = key.length;
         int iter = 1;
-        while(current_sub_keys_length<round_count*16){
+        while (current_sub_keys_length < round_count * 16) {
             //1.1
             byte[] temp = new byte[4];
             System.arraycopy(sub_keys, current_sub_keys_length - 4, temp, 0, 4);
-            if(current_sub_keys_length==round_count*16) {
+            if (current_sub_keys_length == round_count * 16) {
                 break;
             }
             //1.2
@@ -137,7 +92,7 @@ public class AES implements Cipher {
             for (int i = 0; i < 3; i++) {
                 //2.1
                 System.arraycopy(sub_keys, current_sub_keys_length - 4, temp, 0, 4);
-                if(current_sub_keys_length==round_count*16){
+                if (current_sub_keys_length == round_count * 16) {
                     break;
                 }
                 //2.2
@@ -150,7 +105,7 @@ public class AES implements Cipher {
             if (key.length * 8 == 256) {
                 //3.1
                 System.arraycopy(sub_keys, current_sub_keys_length - 4, temp, 0, 4);
-                if(current_sub_keys_length==round_count*16){
+                if (current_sub_keys_length == round_count * 16) {
                     break;
                 }
                 //3.2
@@ -164,15 +119,15 @@ public class AES implements Cipher {
 
             int imax = 0;
             switch (key.length) {
-                case 128/8 -> imax = 0;
-                case 192/8 -> imax = 2;
-                case 256/8 -> imax = 3;
+                case 128 / 8 -> imax = 0;
+                case 192 / 8 -> imax = 2;
+                case 256 / 8 -> imax = 3;
             }
 
             for (int i = 0; i < imax; i++) {
                 //4.1
                 System.arraycopy(sub_keys, current_sub_keys_length - 4, temp, 0, 4);
-                if(current_sub_keys_length==round_count*16){
+                if (current_sub_keys_length == round_count * 16) {
                     break;
                 }
                 //4.2
@@ -254,16 +209,16 @@ public class AES implements Cipher {
         byte[] padded_plaintext = pad(plaintext);
         int round_count;
         switch (key.length) {
-            case 128/8 -> round_count = 10;
-            case 192/8 -> round_count = 12;
-            case 256/8 -> round_count = 14;
+            case 128 / 8 -> round_count = 10;
+            case 192 / 8 -> round_count = 12;
+            case 256 / 8 -> round_count = 14;
             default -> {
                 System.out.println("AES:encryptData: INVALID KEY LENGTH!");
                 return null;
             }
         }
 
-        encryptInitSubKeys(round_count+1);
+        encryptInitSubKeys(round_count + 1);
         System.out.println(HexFormat.of().formatHex(sub_keys));
         byte[] ciphertext = new byte[padded_plaintext.length];
         // encrypt block
@@ -272,7 +227,7 @@ public class AES implements Cipher {
             // take one block
             System.arraycopy(padded_plaintext, block_start_index, block, 0, 16);
             byte[] round_key = new byte[16];
-            System.arraycopy(sub_keys,0,round_key,0,16);
+            System.arraycopy(sub_keys, 0, round_key, 0, 16);
             block = encryptAddRoundKey(block, round_key);
             // n-1 rounds (R0 - R(n-2)
 
@@ -338,9 +293,9 @@ public class AES implements Cipher {
     public byte[] decryptData(byte[] ciphertext) {
         int round_count;
         switch (key.length) {
-            case 128/8 -> round_count = 10;
-            case 192/8 -> round_count = 12;
-            case 256/8 -> round_count = 14;
+            case 128 / 8 -> round_count = 10;
+            case 192 / 8 -> round_count = 12;
+            case 256 / 8 -> round_count = 14;
             default -> {
                 System.out.println("AES:decryptData: INVALID KEY LENGTH!");
                 return null;
