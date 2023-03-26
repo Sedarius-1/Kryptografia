@@ -114,7 +114,8 @@ public class AESKryptoController implements Initializable {
     // Initialize all "onClick" type events for UI elements
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        //TODO: validate user input in key textbox (only hex chars, if too short - pad with 0, if between two lengths - cut or pad)
+        // TODO: validate user input in key textbox (only hex chars, if too short - pad with 0, if between two lengths - cut or pad)
+        // TODO: cipher icon doesn't change properly ("scan" while working, "done" when finished)
 
         // Generate new key
         key_gen_button.setOnAction(ActionEvent -> {
@@ -151,12 +152,12 @@ public class AESKryptoController implements Initializable {
                     try (FileOutputStream outputStream = new FileOutputStream(fileToSave)) {
                         outputStream.write(key_bytes);
                         Alert alert = new Alert(Alert.AlertType.INFORMATION,
-                                "KEY FILE SAVED CORRECTLY", ButtonType.APPLY);
+                                "KEY FILE SAVED CORRECTLY", ButtonType.OK);
                         alert.show();
                     }
                 } catch (IOException e) {
                     Alert alert = new Alert(Alert.AlertType.WARNING,
-                            "ERROR DURING FILE SAVING", ButtonType.APPLY);
+                            "ERROR DURING FILE SAVING", ButtonType.OK);
                     alert.show();
                     throw new RuntimeException(e);
 
@@ -184,29 +185,33 @@ public class AESKryptoController implements Initializable {
                         key_length_slider.setValue(hex.formatHex(readData).length() * 4.0);
                         setKeyLength((int) key_length_slider.getValue());
                         Alert alert = new Alert(Alert.AlertType.INFORMATION,
-                                "KEY FILE LOADED PROPERLY", ButtonType.APPLY);
+                                "KEY FILE LOADED PROPERLY", ButtonType.OK);
                         alert.show();
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
                 } else {
                     Alert alert = new Alert(Alert.AlertType.ERROR,
-                            "THIS IS NOT A VALID KEY FILE (.aeskey)", ButtonType.APPLY);
+                            "THIS IS NOT A VALID KEY FILE (.aeskey)", ButtonType.OK);
                     alert.show();
                 }
             }
         });
 
         plaintext_textarea.textProperty().addListener((obs, old, niu) -> {
-            plaintext_file_content = plaintext_textarea.getText().getBytes(StandardCharsets.UTF_8);
-            setIcon("plain_read", "empty");
-            setIcon("plain_save", "checked");
+            if (!plaintext_textarea.getText().contains("Loaded text from file")) {
+                plaintext_file_content = plaintext_textarea.getText().getBytes(StandardCharsets.UTF_8);
+                setIcon("plain_read", "empty");
+                setIcon("plain_save", "checked");
+            }
         });
 
         ciphertext_textarea.textProperty().addListener((obs, old, niu) -> {
-            ciphertext_file_content = HexFormat.of().parseHex(ciphertext_textarea.getText());
-            setIcon("cipher_read", "empty");
-            setIcon("cipher_save", "checked");
+            if (!ciphertext_textarea.getText().contains("Loaded text from file")) {
+                ciphertext_file_content = HexFormat.of().parseHex(ciphertext_textarea.getText());
+                setIcon("cipher_read", "empty");
+                setIcon("cipher_save", "checked");
+            }
         });
 
         // Save plaintext to file
@@ -221,6 +226,7 @@ public class AESKryptoController implements Initializable {
             if (userSelection == JFileChooser.APPROVE_OPTION) {
                 File fileToSave = fileChooser.getSelectedFile();
 
+                // TODO: app must accept saving not only txt files!!!
                 if (!FilenameUtils.getExtension(fileToSave.getName()).equalsIgnoreCase("txt")) {
                     fileToSave = new File(fileToSave + ".txt");
                     fileToSave = new File(fileToSave.getParentFile(), FilenameUtils.getBaseName(fileToSave.getName()) + ".txt");
@@ -231,12 +237,12 @@ public class AESKryptoController implements Initializable {
                     try (FileOutputStream outputStream = new FileOutputStream(fileToSave)) {
                         outputStream.write(plaintext_file_content);
                         Alert alert = new Alert(Alert.AlertType.INFORMATION,
-                                "PLAINTEXT FILE SAVED CORRECTLY", ButtonType.APPLY);
+                                "PLAINTEXT FILE SAVED CORRECTLY", ButtonType.OK);
                         alert.show();
                     }
                 } catch (IOException e) {
                     Alert alert = new Alert(Alert.AlertType.WARNING,
-                            "ERROR DURING FILE SAVING", ButtonType.APPLY);
+                            "ERROR DURING FILE SAVING", ButtonType.OK);
                     alert.show();
                     throw new RuntimeException(e);
 
@@ -257,25 +263,16 @@ public class AESKryptoController implements Initializable {
             int userSelection = fileChooser.showOpenDialog(parentFrame);
             if (userSelection == JFileChooser.APPROVE_OPTION) {
                 File selectedFile = fileChooser.getSelectedFile();
-                // TODO: unnecessary check (we can handle any file type (KARBO SPIIIIIIN)
-                if (FilenameUtils.getExtension(selectedFile.getName()).equalsIgnoreCase("txt")) {
-                    try {
-                        plaintext_file_content = Files.readAllBytes(selectedFile.toPath());
-                        // String readData = Files.readString(selectedFile.toPath());
-                        // plaintext_textarea.setText(readData);
-                        plaintext_textarea.setText("Loaded text from file " + selectedFile);
-                        setIcon("plain_read", "upload");
+                try {
+                    plaintext_file_content = Files.readAllBytes(selectedFile.toPath());
+                    plaintext_textarea.setText("Loaded text from file " + selectedFile);
+                    setIcon("plain_read", "upload");
 
-                        Alert alert = new Alert(Alert.AlertType.INFORMATION,
-                                "FILE LOADED PROPERLY", ButtonType.APPLY);
-                        alert.show();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                } else {
-                    Alert alert = new Alert(Alert.AlertType.ERROR,
-                            "THIS IS NOT A VALID TEXT FILE (.txt)", ButtonType.APPLY);
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION,
+                            "FILE LOADED PROPERLY", ButtonType.OK);
                     alert.show();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
             }
         });
@@ -303,12 +300,12 @@ public class AESKryptoController implements Initializable {
                         outputStream.write(ciphertext_file_content);
 
                         Alert alert = new Alert(Alert.AlertType.INFORMATION,
-                                "ENCRYPTED FILE SAVED CORRECTLY", ButtonType.APPLY);
+                                "ENCRYPTED FILE SAVED CORRECTLY", ButtonType.OK);
                         alert.show();
                     }
                 } catch (IOException e) {
                     Alert alert = new Alert(Alert.AlertType.WARNING,
-                            "ERROR DURING FILE SAVING", ButtonType.APPLY);
+                            "ERROR DURING FILE SAVING", ButtonType.OK);
                     alert.show();
                     throw new RuntimeException(e);
 
@@ -332,19 +329,17 @@ public class AESKryptoController implements Initializable {
                 if (FilenameUtils.getExtension(selectedFile.getName()).equalsIgnoreCase(ENCRYPTED_FILE_EXT)) {
                     try {
                         ciphertext_file_content = Files.readAllBytes(selectedFile.toPath());
-                        // HexFormat hex = HexFormat.of();
-                        // ciphertext_textarea.setText(hex.formatHex(readData));
                         ciphertext_textarea.setText("Loaded text from file " + selectedFile);
                         setIcon("cipher_save", "upload");
                         Alert alert = new Alert(Alert.AlertType.INFORMATION,
-                                "ENCRYPTED FILE LOADED PROPERLY", ButtonType.APPLY);
+                                "ENCRYPTED FILE LOADED PROPERLY", ButtonType.OK);
                         alert.show();
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
                 } else {
                     Alert alert = new Alert(Alert.AlertType.ERROR,
-                            "THIS IS NOT A VALID AES ENCRYPTED FILE (." + ENCRYPTED_FILE_EXT + ")", ButtonType.APPLY);
+                            "THIS IS NOT A VALID AES ENCRYPTED FILE (." + ENCRYPTED_FILE_EXT + ")", ButtonType.OK);
                     alert.show();
                 }
             }

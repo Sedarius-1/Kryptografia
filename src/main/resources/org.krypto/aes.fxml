@@ -123,7 +123,7 @@
                   <Image url="@file_empty.png" />
                </image>
             </ImageView>
-            <ImageView fitHeight="50.0" fitWidth="50.0" layoutX="453.0" layoutY="265.0" pickOnBounds="true" preserveRatio="true">
+            <ImageView fx:id="file_indicator_crypt" fitHeight="50.0" fitWidth="50.0" layoutX="453.0" layoutY="265.0" pickOnBounds="true" preserveRatio="true">
                <image>
                   <Image url="@file_x.png" />
                </image>

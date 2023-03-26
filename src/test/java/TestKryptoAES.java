@@ -20,7 +20,7 @@ class TestKryptoAES {
         byte[] ciphertext = aes.encryptData(plaintext);
 
         byte[] expected_ciphertext = HexFormat.of().parseHex("9aff9d76bc7edc7e468add034f0dd803");
-        System.out.println(HexFormat.of().formatHex(ciphertext));
+
         assertArrayEquals(expected_ciphertext, ciphertext);
     }
 
