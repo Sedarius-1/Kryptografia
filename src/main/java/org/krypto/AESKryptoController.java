@@ -26,6 +26,7 @@ import java.util.ResourceBundle;
 
 
 public class AESKryptoController implements Initializable {
+
     private static final String ENCRYPTED_FILE_EXT = "aescrypt";
 
 //     TODO: add null checks to all "save" functions
@@ -199,6 +200,7 @@ public class AESKryptoController implements Initializable {
                     Alert alert = new Alert(Alert.AlertType.ERROR,
                             "THIS IS NOT A VALID KEY FILE (.aeskey)", ButtonType.OK);
                     alert.show();
+                    setIcon("crypt", "x");
                 }
             }
         });
@@ -246,6 +248,7 @@ public class AESKryptoController implements Initializable {
                     throw new RuntimeException(e);
 
                 }
+                setIcon("cipher_read", "empty");
                 setIcon("plain_save", "empty");
                 plaintext_textarea.setText("");
                 System.out.println("Save as file: " + fileToSave.getAbsolutePath());
@@ -266,6 +269,10 @@ public class AESKryptoController implements Initializable {
                     plaintext_file_content = Files.readAllBytes(selectedFile.toPath());
                     plaintext_textarea.setText("Loaded text from file " + selectedFile);
                     setIcon("plain_read", "upload");
+                    setIcon("plain_save", "empty");
+                    setIcon("cipher_read", "empty");
+                    setIcon("cipher_save", "empty");
+                    setIcon("crypt", "empty");
 
                     Alert alert = new Alert(Alert.AlertType.INFORMATION,
                             "FILE LOADED PROPERLY", ButtonType.OK);
@@ -309,6 +316,7 @@ public class AESKryptoController implements Initializable {
                     throw new RuntimeException(e);
 
                 }
+                setIcon("plain_read", "empty");
                 setIcon("cipher_save", "empty");
                 ciphertext_textarea.setText("");
                 System.out.println("File saved as: " + fileToSave.getAbsolutePath());
@@ -329,7 +337,12 @@ public class AESKryptoController implements Initializable {
                     try {
                         ciphertext_file_content = Files.readAllBytes(selectedFile.toPath());
                         ciphertext_textarea.setText("Loaded text from file " + selectedFile);
+                        setIcon("plain_read", "empty");
+                        setIcon("plain_save", "empty");
                         setIcon("cipher_read", "upload");
+                        setIcon("cipher_save", "empty");
+                        setIcon("crypt", "empty");
+
                         Alert alert = new Alert(Alert.AlertType.INFORMATION,
                                 "ENCRYPTED FILE LOADED PROPERLY", ButtonType.OK);
                         alert.show();
@@ -346,13 +359,16 @@ public class AESKryptoController implements Initializable {
 
         encrypt.setOnAction(ActionEvent -> {
             if (key_text_field.getText().length() != 128 / 4 && key_text_field.getText().length() != 192 / 4  && key_text_field.getText().length() != 256 / 4) {
+                setIcon("crypt", "x");
                 Alert alert = new Alert(Alert.AlertType.ERROR,
                         "CANNOT ENCRYPT FILE WITH INVALID KEY", ButtonType.OK);
                 alert.show();
             } else if (plaintext_textarea.getText().length()<1) {
+                setIcon("crypt", "x");
                 Alert alert = new Alert(Alert.AlertType.ERROR,
                         "CANNOT ENCRYPT EMPTY PLAINTEXT", ButtonType.OK);
                 alert.show();
+
             }
             else {
                 setIcon("crypt", "scan");
@@ -369,10 +385,12 @@ public class AESKryptoController implements Initializable {
 
         decrypt.setOnAction(ActionEvent -> {
             if (key_text_field.getText().length() != 128 / 4 && key_text_field.getText().length() != 192 / 4 && key_text_field.getText().length() != 256 / 4) {
+                setIcon("crypt", "x");
                 Alert alert = new Alert(Alert.AlertType.ERROR,
                         "CANNOT DECRYPT FILE WITH INVALID KEY", ButtonType.OK);
                 alert.show();
             } else if (ciphertext_textarea.getText().length()<1) {
+                setIcon("crypt", "x");
                 Alert alert = new Alert(Alert.AlertType.ERROR,
                         "CANNOT DECRYPT EMPTY CIPHERTEXT", ButtonType.OK);
                 alert.show();
