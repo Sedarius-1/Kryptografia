@@ -28,7 +28,7 @@ import java.util.ResourceBundle;
 public class AESKryptoController implements Initializable {
     private static final String ENCRYPTED_FILE_EXT = "aescrypt";
 
-    // TODO: add null checks to all "save" functions
+//     TODO: add null checks to all "save" functions
     private byte[] plaintext_file_content;
     private byte[] ciphertext_file_content;
 
@@ -131,38 +131,44 @@ public class AESKryptoController implements Initializable {
 
         // Save key to file
         key_save_button.setOnAction(ActionEvent -> {
-            JFrame parentFrame = new JFrame();
+            if(key_text_field.getText().length()<1){
+                Alert alert = new Alert(Alert.AlertType.ERROR,
+                        "CANNOT SAVE EMPTY KEY", ButtonType.OK);
+            } else {
+                JFrame parentFrame = new JFrame();
 
-            JFileChooser fileChooser = new JFileChooser();
-            fileChooser.setDialogTitle("Specify a file to save");
+                JFileChooser fileChooser = new JFileChooser();
+                fileChooser.setDialogTitle("Specify a file to save");
 
-            int userSelection = fileChooser.showSaveDialog(parentFrame);
+                int userSelection = fileChooser.showSaveDialog(parentFrame);
 
-            if (userSelection == JFileChooser.APPROVE_OPTION) {
-                File fileToSave = fileChooser.getSelectedFile();
+                if (userSelection == JFileChooser.APPROVE_OPTION) {
+                    File fileToSave = fileChooser.getSelectedFile();
 
-                if (!FilenameUtils.getExtension(fileToSave.getName()).equalsIgnoreCase("aeskey")) {
-                    fileToSave = new File(fileToSave + ".aeskey");
-                    fileToSave = new File(fileToSave.getParentFile(), FilenameUtils.getBaseName(fileToSave.getName()) + ".aeskey");
-                }
-                byte[] key_bytes = HexFormat.of().parseHex(key_text_field.getText());
-
-                try {
-                    try (FileOutputStream outputStream = new FileOutputStream(fileToSave)) {
-                        outputStream.write(key_bytes);
-                        Alert alert = new Alert(Alert.AlertType.INFORMATION,
-                                "KEY FILE SAVED CORRECTLY", ButtonType.OK);
-                        alert.show();
+                    if (!FilenameUtils.getExtension(fileToSave.getName()).equalsIgnoreCase("aeskey")) {
+                        fileToSave = new File(fileToSave + ".aeskey");
+                        fileToSave = new File(fileToSave.getParentFile(), FilenameUtils.getBaseName(fileToSave.getName()) + ".aeskey");
                     }
-                } catch (IOException e) {
-                    Alert alert = new Alert(Alert.AlertType.WARNING,
-                            "ERROR DURING FILE SAVING", ButtonType.OK);
-                    alert.show();
-                    throw new RuntimeException(e);
+                    byte[] key_bytes = HexFormat.of().parseHex(key_text_field.getText());
 
+                    try {
+                        try (FileOutputStream outputStream = new FileOutputStream(fileToSave)) {
+                            outputStream.write(key_bytes);
+                            Alert alert = new Alert(Alert.AlertType.INFORMATION,
+                                    "KEY FILE SAVED CORRECTLY", ButtonType.OK);
+                            alert.show();
+                        }
+                    } catch (IOException e) {
+                        Alert alert = new Alert(Alert.AlertType.WARNING,
+                                "ERROR DURING FILE SAVING", ButtonType.OK);
+                        alert.show();
+                        throw new RuntimeException(e);
+
+                    }
+                    System.out.println("Save as file: " + fileToSave.getAbsolutePath());
                 }
-                System.out.println("Save as file: " + fileToSave.getAbsolutePath());
             }
+
         });
 
         // Read key from file
@@ -225,7 +231,7 @@ public class AESKryptoController implements Initializable {
             if (userSelection == JFileChooser.APPROVE_OPTION) {
                 File fileToSave = fileChooser.getSelectedFile();
 
-                    fileToSave = new File(fileToSave.getParentFile(), fileToSave.getName());
+                fileToSave = new File(fileToSave.getParentFile(), fileToSave.getName());
                 try {
                     try (FileOutputStream outputStream = new FileOutputStream(fileToSave)) {
                         outputStream.write(plaintext_file_content);
@@ -323,7 +329,7 @@ public class AESKryptoController implements Initializable {
                     try {
                         ciphertext_file_content = Files.readAllBytes(selectedFile.toPath());
                         ciphertext_textarea.setText("Loaded text from file " + selectedFile);
-                        setIcon("cipher_save", "upload");
+                        setIcon("cipher_read", "upload");
                         Alert alert = new Alert(Alert.AlertType.INFORMATION,
                                 "ENCRYPTED FILE LOADED PROPERLY", ButtonType.OK);
                         alert.show();
@@ -339,31 +345,49 @@ public class AESKryptoController implements Initializable {
         });
 
         encrypt.setOnAction(ActionEvent -> {
-            setIcon("crypt", "scan");
-//            if(key_text_field == null){
-//                Alert alert = new Alert(Alert.AlertType.ERROR,
-//                        "CANNOT ENCRYPT FILE WITHOUT A KEY", ButtonType.OK);
-//                alert.show();
-//            }
-            AES aes = new AES(HexFormat.of().parseHex(key_text_field.getText()));
-            ciphertext_file_content = aes.encryptData(plaintext_file_content);
+            if (key_text_field.getText().length() != 128 / 4 && key_text_field.getText().length() != 192 / 4  && key_text_field.getText().length() != 256 / 4) {
+                Alert alert = new Alert(Alert.AlertType.ERROR,
+                        "CANNOT ENCRYPT FILE WITH INVALID KEY", ButtonType.OK);
+                alert.show();
+            } else if (plaintext_textarea.getText().length()<1) {
+                Alert alert = new Alert(Alert.AlertType.ERROR,
+                        "CANNOT ENCRYPT EMPTY PLAINTEXT", ButtonType.OK);
+                alert.show();
+            }
+            else {
+                setIcon("crypt", "scan");
+                AES aes = new AES(HexFormat.of().parseHex(key_text_field.getText()));
+                ciphertext_file_content = aes.encryptData(plaintext_file_content);
 
-            ciphertext_textarea.setText(HexFormat.of().formatHex(ciphertext_file_content));
+                ciphertext_textarea.setText(HexFormat.of().formatHex(ciphertext_file_content));
 
-            setIcon("cipher_save", "download");
-            setIcon("crypt", "checked");
+                setIcon("cipher_save", "download");
+                setIcon("crypt", "checked");
+            }
+
         });
 
         decrypt.setOnAction(ActionEvent -> {
-            setIcon("crypt", "scan");
+            if (key_text_field.getText().length() != 128 / 4 && key_text_field.getText().length() != 192 / 4 && key_text_field.getText().length() != 256 / 4) {
+                Alert alert = new Alert(Alert.AlertType.ERROR,
+                        "CANNOT DECRYPT FILE WITH INVALID KEY", ButtonType.OK);
+                alert.show();
+            } else if (ciphertext_textarea.getText().length()<1) {
+                Alert alert = new Alert(Alert.AlertType.ERROR,
+                        "CANNOT DECRYPT EMPTY CIPHERTEXT", ButtonType.OK);
+                alert.show();
+            }else {
+                setIcon("crypt", "scan");
 
-            AES aes = new AES(HexFormat.of().parseHex(key_text_field.getText()));
-            plaintext_file_content = aes.decryptData(ciphertext_file_content);
+                AES aes = new AES(HexFormat.of().parseHex(key_text_field.getText()));
+                plaintext_file_content = aes.decryptData(ciphertext_file_content);
 
-            plaintext_textarea.setText(new String(plaintext_file_content, StandardCharsets.UTF_8));
+//                plaintext_textarea.setText(new String(plaintext_file_content, StandardCharsets.UTF_8));
+                plaintext_textarea.setText("DECRYPTED");
 
-            setIcon("cipher_save", "download");
-            setIcon("crypt", "checked");
+                setIcon("plain_save", "download");
+                setIcon("crypt", "checked");
+            }
         });
     }
 
