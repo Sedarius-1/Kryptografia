@@ -23,13 +23,13 @@ import java.util.HexFormat;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.logging.Logger;
 
 
 public class AESKryptoController implements Initializable {
 
     private static final String ENCRYPTED_FILE_EXT = "aescrypt";
-
-//     TODO: add null checks to all "save" functions
+    private String FILE_EXTENSION = "";
     private byte[] plaintext_file_content;
     private byte[] ciphertext_file_content;
 
@@ -205,6 +205,7 @@ public class AESKryptoController implements Initializable {
             }
         });
 
+        // TODO: fix this fuck
 //        plaintext_textarea.textProperty().addListener((obs, old, niu) -> {
 //            if (!plaintext_textarea.getText().contains("Loaded text from file")) {
 //                plaintext_file_content = plaintext_textarea.getText().getBytes(StandardCharsets.UTF_8);
@@ -233,7 +234,7 @@ public class AESKryptoController implements Initializable {
             if (userSelection == JFileChooser.APPROVE_OPTION) {
                 File fileToSave = fileChooser.getSelectedFile();
 
-                fileToSave = new File(fileToSave.getParentFile(), fileToSave.getName());
+                fileToSave = new File(fileToSave.getParentFile(), fileToSave.getName()+"."+FILE_EXTENSION);
                 try {
                     try (FileOutputStream outputStream = new FileOutputStream(fileToSave)) {
                         outputStream.write(plaintext_file_content);
@@ -249,6 +250,7 @@ public class AESKryptoController implements Initializable {
 
                 }
                 setIcon("cipher_read", "empty");
+                setIcon("plain_read", "empty");
                 setIcon("plain_save", "empty");
                 plaintext_textarea.setText("");
                 System.out.println("Save as file: " + fileToSave.getAbsolutePath());
@@ -266,6 +268,7 @@ public class AESKryptoController implements Initializable {
             if (userSelection == JFileChooser.APPROVE_OPTION) {
                 File selectedFile = fileChooser.getSelectedFile();
                 try {
+                    FILE_EXTENSION = FilenameUtils.getExtension(selectedFile.getName());
                     plaintext_file_content = Files.readAllBytes(selectedFile.toPath());
                     plaintext_textarea.setText("Loaded text from file " + selectedFile);
                     setIcon("plain_read", "upload");
@@ -297,7 +300,7 @@ public class AESKryptoController implements Initializable {
 
                 if (!FilenameUtils.getExtension(fileToSave.getName()).equalsIgnoreCase(ENCRYPTED_FILE_EXT)) {
 //                    fileToSave = new File(fileToSave.getName() + "." + ENCRYPTED_FILE_EXT);
-                    fileToSave = new File(fileToSave.getParentFile(), fileToSave.getName() + "." + ENCRYPTED_FILE_EXT);
+                    fileToSave = new File(fileToSave.getParentFile(), fileToSave.getName() + "." + FILE_EXTENSION + "." + ENCRYPTED_FILE_EXT);
                 }
                 // byte[] encrypted_bytes = HexFormat.of().parseHex(ciphertext_textarea.getText());
 
@@ -317,6 +320,7 @@ public class AESKryptoController implements Initializable {
 
                 }
                 setIcon("plain_read", "empty");
+                setIcon("cipher_read", "empty");
                 setIcon("cipher_save", "empty");
                 ciphertext_textarea.setText("");
                 System.out.println("File saved as: " + fileToSave.getAbsolutePath());
@@ -335,8 +339,11 @@ public class AESKryptoController implements Initializable {
                 File selectedFile = fileChooser.getSelectedFile();
                 if (FilenameUtils.getExtension(selectedFile.getName()).equalsIgnoreCase(ENCRYPTED_FILE_EXT)) {
                     try {
+                        String filename[] = selectedFile.getName().split("\\.");
                         ciphertext_file_content = Files.readAllBytes(selectedFile.toPath());
                         ciphertext_textarea.setText("Loaded text from file " + selectedFile);
+                        FILE_EXTENSION = filename[filename.length - 2];
+                        System.out.println(FILE_EXTENSION);
                         setIcon("plain_read", "empty");
                         setIcon("plain_save", "empty");
                         setIcon("cipher_read", "upload");
@@ -396,7 +403,6 @@ public class AESKryptoController implements Initializable {
                 alert.show();
             }else {
                 setIcon("crypt", "scan");
-
                 AES aes = new AES(HexFormat.of().parseHex(key_text_field.getText()));
                 plaintext_file_content = aes.decryptData(ciphertext_file_content);
 
