@@ -115,7 +115,6 @@ public class AESKryptoController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         // TODO: validate user input in key textbox (only hex chars, if too short - pad with 0, if between two lengths - cut or pad)
-        // TODO: cipher icon doesn't change properly ("scan" while working, "done" when finished)
 
         // Generate new key
         key_gen_button.setOnAction(ActionEvent -> {
@@ -198,21 +197,21 @@ public class AESKryptoController implements Initializable {
             }
         });
 
-        plaintext_textarea.textProperty().addListener((obs, old, niu) -> {
-            if (!plaintext_textarea.getText().contains("Loaded text from file")) {
-                plaintext_file_content = plaintext_textarea.getText().getBytes(StandardCharsets.UTF_8);
-                setIcon("plain_read", "empty");
-                setIcon("plain_save", "checked");
-            }
-        });
+//        plaintext_textarea.textProperty().addListener((obs, old, niu) -> {
+//            if (!plaintext_textarea.getText().contains("Loaded text from file")) {
+//                plaintext_file_content = plaintext_textarea.getText().getBytes(StandardCharsets.UTF_8);
+//                setIcon("plain_read", "empty");
+//                setIcon("plain_save", "checked");
+//            }
+//        });
 
-        ciphertext_textarea.textProperty().addListener((obs, old, niu) -> {
-            if (!ciphertext_textarea.getText().contains("Loaded text from file")) {
-                ciphertext_file_content = HexFormat.of().parseHex(ciphertext_textarea.getText());
-                setIcon("cipher_read", "empty");
-                setIcon("cipher_save", "checked");
-            }
-        });
+//        ciphertext_textarea.textProperty().addListener((obs, old, niu) -> {
+//            if (!ciphertext_textarea.getText().contains("Loaded text from file")) {
+//                ciphertext_file_content = HexFormat.of().parseHex(ciphertext_textarea.getText());
+//                setIcon("cipher_read", "empty");
+//                setIcon("cipher_save", "checked");
+//            }
+//        });
 
         // Save plaintext to file
         save_plaintext_button.setOnAction(ActionEvent -> {
@@ -226,13 +225,7 @@ public class AESKryptoController implements Initializable {
             if (userSelection == JFileChooser.APPROVE_OPTION) {
                 File fileToSave = fileChooser.getSelectedFile();
 
-                // TODO: app must accept saving not only txt files!!!
-                if (!FilenameUtils.getExtension(fileToSave.getName()).equalsIgnoreCase("txt")) {
-                    fileToSave = new File(fileToSave + ".txt");
-                    fileToSave = new File(fileToSave.getParentFile(), FilenameUtils.getBaseName(fileToSave.getName()) + ".txt");
-                }
-                // byte[] plaintext_bytes = plaintext_textarea.getText().getBytes();
-
+                    fileToSave = new File(fileToSave.getParentFile(), fileToSave.getName());
                 try {
                     try (FileOutputStream outputStream = new FileOutputStream(fileToSave)) {
                         outputStream.write(plaintext_file_content);
@@ -290,8 +283,8 @@ public class AESKryptoController implements Initializable {
                 File fileToSave = fileChooser.getSelectedFile();
 
                 if (!FilenameUtils.getExtension(fileToSave.getName()).equalsIgnoreCase(ENCRYPTED_FILE_EXT)) {
-                    fileToSave = new File(fileToSave + "." + ENCRYPTED_FILE_EXT);
-                    fileToSave = new File(fileToSave.getParentFile(), FilenameUtils.getBaseName(fileToSave.getName()) + "." + ENCRYPTED_FILE_EXT);
+//                    fileToSave = new File(fileToSave.getName() + "." + ENCRYPTED_FILE_EXT);
+                    fileToSave = new File(fileToSave.getParentFile(), fileToSave.getName() + "." + ENCRYPTED_FILE_EXT);
                 }
                 // byte[] encrypted_bytes = HexFormat.of().parseHex(ciphertext_textarea.getText());
 
@@ -347,14 +340,18 @@ public class AESKryptoController implements Initializable {
 
         encrypt.setOnAction(ActionEvent -> {
             setIcon("crypt", "scan");
-
+//            if(key_text_field == null){
+//                Alert alert = new Alert(Alert.AlertType.ERROR,
+//                        "CANNOT ENCRYPT FILE WITHOUT A KEY", ButtonType.OK);
+//                alert.show();
+//            }
             AES aes = new AES(HexFormat.of().parseHex(key_text_field.getText()));
             ciphertext_file_content = aes.encryptData(plaintext_file_content);
 
             ciphertext_textarea.setText(HexFormat.of().formatHex(ciphertext_file_content));
 
             setIcon("cipher_save", "download");
-            setIcon("crypt", "done");
+            setIcon("crypt", "checked");
         });
 
         decrypt.setOnAction(ActionEvent -> {
@@ -366,7 +363,7 @@ public class AESKryptoController implements Initializable {
             plaintext_textarea.setText(new String(plaintext_file_content, StandardCharsets.UTF_8));
 
             setIcon("cipher_save", "download");
-            setIcon("crypt", "done");
+            setIcon("crypt", "checked");
         });
     }
 

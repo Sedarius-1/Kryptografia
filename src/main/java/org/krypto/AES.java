@@ -263,10 +263,12 @@ public class AES implements Cipher {
     // DECRYPTION:
 
     private byte[] unpad(byte[] padded_data) {
+        System.out.println("Padded data length:"+padded_data.length);
         int pad_length;
         pad_length = padded_data[padded_data.length - 1];
         byte[] unpadded_data = new byte[padded_data.length - pad_length];
         System.arraycopy(padded_data, 0, unpadded_data, 0, unpadded_data.length);
+        System.out.println("Unpadded data length:"+unpadded_data.length);
         return unpadded_data;
     }
 
@@ -348,6 +350,7 @@ public class AES implements Cipher {
 
     @Override
     public byte[] decryptData(byte[] ciphertext) {
+        System.out.println("Ciphertext length:"+ciphertext.length);
         int round_count;
         switch (key.length) {
             case 128 / 8 -> round_count = 10;
