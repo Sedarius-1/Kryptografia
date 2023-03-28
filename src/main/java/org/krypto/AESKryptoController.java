@@ -23,7 +23,6 @@ import java.util.HexFormat;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.logging.Logger;
 
 
 public class AESKryptoController implements Initializable {
@@ -60,6 +59,11 @@ public class AESKryptoController implements Initializable {
     private Button encrypt;
     @FXML
     private Button decrypt;
+
+    @FXML
+    private RadioButton radio_file;
+    @FXML
+    private RadioButton radio_text;
 
     @FXML
     private javafx.scene.image.ImageView key_length_display;
@@ -132,7 +136,7 @@ public class AESKryptoController implements Initializable {
 
         // Save key to file
         key_save_button.setOnAction(ActionEvent -> {
-            if(key_text_field.getText().length()<1){
+            if (key_text_field.getText().length() < 1) {
                 Alert alert = new Alert(Alert.AlertType.ERROR,
                         "CANNOT SAVE EMPTY KEY", ButtonType.OK);
             } else {
@@ -365,25 +369,29 @@ public class AESKryptoController implements Initializable {
         });
 
         encrypt.setOnAction(ActionEvent -> {
-            if (key_text_field.getText().length() != 128 / 4 && key_text_field.getText().length() != 192 / 4  && key_text_field.getText().length() != 256 / 4) {
+            // TODO: refactor error handling
+            if (key_text_field.getText().length() != 128 / 4 && key_text_field.getText().length() != 192 / 4 && key_text_field.getText().length() != 256 / 4) {
                 setIcon("crypt", "x");
                 Alert alert = new Alert(Alert.AlertType.ERROR,
                         "CANNOT ENCRYPT FILE WITH INVALID KEY", ButtonType.OK);
                 alert.show();
-            } else if (plaintext_textarea.getText().length()<1) {
+            } else if (plaintext_textarea.getText().length() < 1) {
                 setIcon("crypt", "x");
                 Alert alert = new Alert(Alert.AlertType.ERROR,
                         "CANNOT ENCRYPT EMPTY PLAINTEXT", ButtonType.OK);
                 alert.show();
 
-            }
-            else {
+            } else {
                 setIcon("crypt", "scan");
                 AES aes = new AES(HexFormat.of().parseHex(key_text_field.getText()));
-                ciphertext_file_content = aes.encryptData(plaintext_file_content);
-
-                ciphertext_textarea.setText(HexFormat.of().formatHex(ciphertext_file_content));
-
+                if (radio_file.isArmed()) {
+                    ciphertext_file_content = aes.encryptData(plaintext_file_content);
+                    ciphertext_textarea.setText("Encrypted file");
+                } else {
+                    plaintext_file_content = plaintext_textarea.getText().getBytes(StandardCharsets.UTF_8);
+                    ciphertext_file_content = aes.encryptData(plaintext_file_content);
+                    ciphertext_textarea.setText(HexFormat.of().formatHex(ciphertext_file_content));
+                }
                 setIcon("cipher_save", "download");
                 setIcon("crypt", "checked");
             }
@@ -391,23 +399,28 @@ public class AESKryptoController implements Initializable {
         });
 
         decrypt.setOnAction(ActionEvent -> {
+            // TODO: refactor error handling
             if (key_text_field.getText().length() != 128 / 4 && key_text_field.getText().length() != 192 / 4 && key_text_field.getText().length() != 256 / 4) {
                 setIcon("crypt", "x");
                 Alert alert = new Alert(Alert.AlertType.ERROR,
                         "CANNOT DECRYPT FILE WITH INVALID KEY", ButtonType.OK);
                 alert.show();
-            } else if (ciphertext_textarea.getText().length()<1) {
+            } else if (ciphertext_textarea.getText().length() < 1) {
                 setIcon("crypt", "x");
                 Alert alert = new Alert(Alert.AlertType.ERROR,
                         "CANNOT DECRYPT EMPTY CIPHERTEXT", ButtonType.OK);
                 alert.show();
-            }else {
+            } else {
                 setIcon("crypt", "scan");
                 AES aes = new AES(HexFormat.of().parseHex(key_text_field.getText()));
-                plaintext_file_content = aes.decryptData(ciphertext_file_content);
-
-//                plaintext_textarea.setText(new String(plaintext_file_content, StandardCharsets.UTF_8));
-                plaintext_textarea.setText("DECRYPTED");
+                if (radio_file.isArmed()) {
+                    plaintext_file_content = aes.decryptData(ciphertext_file_content);
+                    plaintext_textarea.setText("Decrypted file");
+                } else {
+                    ciphertext_file_content = HexFormat.of().parseHex(ciphertext_textarea.getText());
+                    plaintext_file_content = aes.decryptData(ciphertext_file_content);
+                    plaintext_textarea.setText(new String(plaintext_file_content, StandardCharsets.UTF_8));
+                }
 
                 setIcon("plain_save", "download");
                 setIcon("crypt", "checked");
