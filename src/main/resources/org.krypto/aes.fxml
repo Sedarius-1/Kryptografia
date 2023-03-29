@@ -128,6 +128,11 @@
                   <Image url="@file_x.png" />
                </image>
             </ImageView>
+          <RadioButton fx:id="radio_text" layoutX="378.0" layoutY="222.0" mnemonicParsing="false" text="From textarea">
+              <toggleGroup>
+                  <ToggleGroup fx:id="source" />
+              </toggleGroup></RadioButton>
+          <RadioButton fx:id="radio_file" layoutX="514.0" layoutY="222.0" mnemonicParsing="false" selected="true" text="From file" toggleGroup="$source" />
       </children>
     </AnchorPane>
   </children>

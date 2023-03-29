@@ -211,20 +211,28 @@ public class AESKryptoController implements Initializable {
 
         // TODO: fix this fuck
 //        plaintext_textarea.textProperty().addListener((obs, old, niu) -> {
-//            if (!plaintext_textarea.getText().contains("Loaded text from file")) {
-//                plaintext_file_content = plaintext_textarea.getText().getBytes(StandardCharsets.UTF_8);
-//                setIcon("plain_read", "empty");
-//                setIcon("plain_save", "checked");
-//            }
-//        });
-
-//        ciphertext_textarea.textProperty().addListener((obs, old, niu) -> {
-//            if (!ciphertext_textarea.getText().contains("Loaded text from file")) {
-//                ciphertext_file_content = HexFormat.of().parseHex(ciphertext_textarea.getText());
-//                setIcon("cipher_read", "empty");
-//                setIcon("cipher_save", "checked");
-//            }
-//        });
+////            if (!plaintext_textarea.getText().contains("Loaded text from file")) {
+////                plaintext_file_content = plaintext_textarea.getText().getBytes(StandardCharsets.UTF_8);
+////                setIcon("plain_read", "empty");
+////                setIcon("plain_save", "checked");
+////            }
+////        });
+//
+////        ciphertext_textarea.textProperty().addListener((obs, old, niu) -> {
+////            if (!ciphertext_textarea.getText().contains("Loaded text from file")) {
+////                ciphertext_file_content = HexFormat.of().parseHex(ciphertext_textarea.getText());
+////                setIcon("cipher_read", "empty");
+////                setIcon("cipher_save", "checked");
+////            }
+////        });
+        radio_text.selectedProperty().addListener((obs, old, niu) -> {
+            FILE_EXTENSION = "txt";
+            setIcon("plain_read", "empty");
+            setIcon("plain_save", "empty");
+            setIcon("cipher_read", "empty");
+            setIcon("cipher_save", "empty");
+            setIcon("crypt", "empty");
+        });
 
         // Save plaintext to file
         save_plaintext_button.setOnAction(ActionEvent -> {
@@ -377,7 +385,7 @@ public class AESKryptoController implements Initializable {
             } else {
                 setIcon("crypt", "scan");
                 AES aes = new AES(HexFormat.of().parseHex(key_text_field.getText()));
-                if (radio_file.isArmed()) {
+                if (radio_file.isSelected()) {
                     ciphertext_file_content = aes.encryptData(plaintext_file_content);
                     ciphertext_textarea.setText("Encrypted file");
                 } else {
@@ -388,6 +396,7 @@ public class AESKryptoController implements Initializable {
                         alert.show();
                     } else {
                         plaintext_file_content = plaintext_textarea.getText().getBytes(StandardCharsets.UTF_8);
+                        plaintext_textarea.clear();
                         ciphertext_file_content = aes.encryptData(plaintext_file_content);
                         ciphertext_textarea.setText(HexFormat.of().formatHex(ciphertext_file_content));
                     }
@@ -407,7 +416,7 @@ public class AESKryptoController implements Initializable {
             } else {
                 setIcon("crypt", "scan");
                 AES aes = new AES(HexFormat.of().parseHex(key_text_field.getText()));
-                if (radio_file.isArmed()) {
+                if (radio_file.isSelected()) {
                     plaintext_file_content = aes.decryptData(ciphertext_file_content);
                     plaintext_textarea.setText("Decrypted file");
                 } else {
@@ -418,6 +427,7 @@ public class AESKryptoController implements Initializable {
                         alert.show();
                     } else {
                         ciphertext_file_content = HexFormat.of().parseHex(ciphertext_textarea.getText());
+                        ciphertext_textarea.clear();
                         plaintext_file_content = aes.decryptData(ciphertext_file_content);
                         plaintext_textarea.setText(new String(plaintext_file_content, StandardCharsets.UTF_8));
                     }
