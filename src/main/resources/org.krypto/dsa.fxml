@@ -32,8 +32,11 @@
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
 <?import javafx.scene.text.*?>
 
 <VBox prefHeight="400.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.krypto.DSAKryptoController">
@@ -54,14 +57,82 @@
         </Menu>
       </menus>
     </MenuBar>
-    <AnchorPane maxHeight="-1.0" maxWidth="-1.0" prefHeight="573.0" prefWidth="640.0" VBox.vgrow="ALWAYS">
-      <children>
-        <Label alignment="CENTER" layoutX="160.0" layoutY="50.0" style="&#10;" text="DSA" textAlignment="CENTER" textFill="#9f9f9f" wrapText="false">
-          <font>
-            <Font size="18.0" />
-          </font>
-        </Label>
-      </children>
-    </AnchorPane>
+      <AnchorPane maxHeight="-1.0" maxWidth="-1.0" prefHeight="540.0" prefWidth="960.0" VBox.vgrow="ALWAYS">
+          <children>
+              <Label alignment="CENTER" style="&#10;" text="DSA" textAlignment="CENTER" wrapText="false" AnchorPane.leftAnchor="458.0" AnchorPane.topAnchor="0.0">
+                  <font>
+                      <Font size="25.0" />
+                  </font>
+              </Label>
+              <TextField fx:id="key_public_text_field" layoutX="236.0" layoutY="71.0" prefHeight="31.0" prefWidth="527.0" promptText="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+                  <font>
+                      <Font name="Consolas" size="13.0" />
+                  </font></TextField>
+              <Button fx:id="key_gen_button" layoutX="20.0" layoutY="70.0" maxHeight="-Infinity" maxWidth="-Infinity" mnemonicParsing="false" prefHeight="100.0" prefWidth="100.0" text="Generate new key pair" textAlignment="CENTER" textOverrun="CLIP" wrapText="true" />
+              <Button fx:id="decrypt" layoutX="403.0" layoutY="378.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="150.0" text="&lt;--- DECRYPT ---" />
+              <Label layoutX="14.0" layoutY="39.0" text="Key" AnchorPane.leftAnchor="20.0" AnchorPane.topAnchor="40.0">
+                  <font>
+                      <Font size="16.0" />
+                  </font></Label>
+              <Button fx:id="encrypt" layoutX="403.0" layoutY="328.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="150.0" text="--- ENCRYPT ---&gt;" />
+              <Label layoutX="151.0" layoutY="78.0" prefHeight="18.0" prefWidth="65.0" text="Public key:" />
+              <TextArea fx:id="plaintext_textarea" layoutX="37.0" layoutY="290.0" prefHeight="150.0" prefWidth="320.0" AnchorPane.leftAnchor="40.0" />
+              <TextArea fx:id="ciphertext_textarea" layoutX="577.0" layoutY="290.0" prefHeight="150.0" prefWidth="320.0" AnchorPane.rightAnchor="40.0" />
+              <Button fx:id="read_plaintext_button" layoutX="160.0" layoutY="250.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="200.0" text="Read plaintext from file" />
+              <Button fx:id="save_plaintext_button" layoutX="160.0" layoutY="449.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="200.0" text="Save plaintext to file" />
+              <Button fx:id="read_ciphertext_button" layoutX="720.0" layoutY="250.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="200.0" text="Read ciphertext from file" />
+              <Button fx:id="save_ciphertext_button" layoutX="720.0" layoutY="449.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="200.0" text="Save ciphertext to file" />
+              <Button fx:id="key_read_button" layoutX="840.0" layoutY="119.0" mnemonicParsing="false" prefHeight="50.0" prefWidth="100.0" text="Read from file" textAlignment="CENTER" wrapText="true" AnchorPane.rightAnchor="20.0" />
+              <Button fx:id="key_save_button" layoutX="840.0" layoutY="62.0" mnemonicParsing="false" prefHeight="50.0" prefWidth="100.0" text="Save to file" wrapText="true" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="62.0" />
+              <Label layoutX="40.0" layoutY="256.0" text="Plaintext:" AnchorPane.leftAnchor="40.0" />
+              <Label layoutX="600.0" layoutY="256.0" text="Ciphertext:" />
+              <Line endX="950.0" endY="35.0" layoutX="5.0" startY="35.0" />
+              <Line endX="950.0" endY="200.0" startX="5.0" startY="200.0" />
+              <Label layoutX="14.0" layoutY="201.0" prefHeight="25.0" prefWidth="81.0" text="Message">
+                  <font>
+                      <Font size="16.0" />
+                  </font>
+                  <padding>
+                      <Insets top="3.0" />
+                  </padding>
+              </Label>
+              <ImageView fx:id="file_indicator_read_plaintext" fitHeight="50.0" fitWidth="50.0" layoutX="109.0" layoutY="240.0" pickOnBounds="true" preserveRatio="true" AnchorPane.leftAnchor="109.0" AnchorPane.topAnchor="240.0">
+                  <image>
+                      <Image url="@file_empty.png" />
+                  </image>
+              </ImageView>
+              <ImageView fx:id="file_indicator_save_plaintext" fitHeight="50.0" fitWidth="50.0" layoutX="109.0" layoutY="439.0" pickOnBounds="true" preserveRatio="true">
+                  <image>
+                      <Image url="@file_empty.png" />
+                  </image>
+              </ImageView>
+              <ImageView fx:id="file_indicator_save_ciphertext" fitHeight="50.0" fitWidth="50.0" layoutX="666.0" layoutY="439.0" pickOnBounds="true" preserveRatio="true">
+                  <image>
+                      <Image url="@file_empty.png" />
+                  </image>
+              </ImageView>
+              <ImageView fx:id="file_indicator_read_ciphertext" fitHeight="50.0" fitWidth="50.0" layoutX="666.0" layoutY="240.0" pickOnBounds="true" preserveRatio="true">
+                  <image>
+                      <Image url="@file_empty.png" />
+                  </image>
+              </ImageView>
+              <ImageView fx:id="file_indicator_crypt" fitHeight="50.0" fitWidth="50.0" layoutX="453.0" layoutY="265.0" pickOnBounds="true" preserveRatio="true">
+                  <image>
+                      <Image url="@file_x.png" />
+                  </image>
+              </ImageView>
+              <RadioButton fx:id="radio_text" layoutX="378.0" layoutY="222.0" mnemonicParsing="false" text="From textarea">
+                  <toggleGroup>
+                      <ToggleGroup fx:id="source" />
+                  </toggleGroup></RadioButton>
+              <RadioButton fx:id="radio_file" layoutX="514.0" layoutY="222.0" mnemonicParsing="false" selected="true" text="From file" toggleGroup="$source" />
+            <TextField fx:id="key_private_text_field" layoutX="236.0" layoutY="128.0" prefHeight="31.0" prefWidth="527.0" promptText="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+               <font>
+                  <Font name="Consolas" size="13.0" />
+               </font>
+            </TextField>
+            <Label layoutX="151.0" layoutY="134.0" prefHeight="18.0" prefWidth="65.0" text="Private key:" />
+          </children>
+      </AnchorPane>
   </children>
 </VBox>
