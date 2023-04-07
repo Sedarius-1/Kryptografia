@@ -139,6 +139,7 @@ public class AESKryptoController implements Initializable {
             if (key_text_field.getText().length() < 1) {
                 Alert alert = new Alert(Alert.AlertType.ERROR,
                         "CANNOT SAVE EMPTY KEY", ButtonType.OK);
+                alert.show();
             } else {
                 JFrame parentFrame = new JFrame();
 
@@ -333,7 +334,7 @@ public class AESKryptoController implements Initializable {
                 File selectedFile = fileChooser.getSelectedFile();
                 if (FilenameUtils.getExtension(selectedFile.getName()).equalsIgnoreCase(ENCRYPTED_FILE_EXT)) {
                     try {
-                        String filename[] = selectedFile.getName().split("\\.");
+                        String[] filename = selectedFile.getName().split("\\.");
                         ciphertext_file_content = Files.readAllBytes(selectedFile.toPath());
                         ciphertext_textarea.setText("Loaded text from file " + selectedFile);
                         FILE_EXTENSION = filename[filename.length - 2];

@@ -6,8 +6,6 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-import java.io.IOException;
-import java.util.HexFormat;
 import java.util.Objects;
 
 // Key-yellow.png from https://freesvg.org/yellow-lock-key-vector-image (public domain)

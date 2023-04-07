@@ -1,7 +1,5 @@
 package org.krypto;
 
-import java.util.HexFormat;
-
 public class AES implements Cipher {
     private byte[] key;
 
@@ -16,26 +14,16 @@ public class AES implements Cipher {
         this.key = key;
         int round_count = 10;
         switch (key.length) {
-            case 128 / 8 -> round_count = 10;
+            // case 128 / 8 -> round_count = 10;
             case 192 / 8 -> round_count = 12;
             case 256 / 8 -> round_count = 14;
-            default -> {
-                System.out.println("AES:setKey: INVALID KEY LENGTH!");
-            }
+            default -> System.out.println("AES:setKey: INVALID KEY LENGTH!");
         }
         encryptInitSubKeys(round_count + 1);
     }
 
     private byte GalloisMultiply(byte value, int[] lookup) {
         return (byte) lookup[(int) value & 0xff];
-    }
-
-    private void debugPrintBlock(byte[] block) {
-        StringBuilder sb = new StringBuilder();
-        for (byte b : block) {
-            sb.append(String.format("%02x", b));
-        }
-        System.out.println(sb);
     }
 
     private byte[] rcon(int number) {
@@ -73,11 +61,11 @@ public class AES implements Cipher {
     }
 
     public void encryptInitSubKeys(int round_count) {
-        int current_sub_keys_length = 0;
+        int current_sub_keys_length;
         sub_keys = new byte[16 * round_count];
         System.arraycopy(key, 0, sub_keys, 0, key.length);
         current_sub_keys_length = key.length;
-        int iter = 1;
+        int iteration = 1;
         while (current_sub_keys_length < round_count * 16) {
             //1.1
             byte[] temp = new byte[4];
@@ -90,8 +78,8 @@ public class AES implements Cipher {
             //1.3
             temp = SubWord(temp);
             //1.4
-            temp = XORWord(temp, rcon(iter));
-            iter++;
+            temp = XORWord(temp, rcon(iteration));
+            iteration++;
             //1.5
             byte[] in = new byte[4];
             System.arraycopy(sub_keys, current_sub_keys_length - key.length, in, 0, 4);
@@ -129,7 +117,7 @@ public class AES implements Cipher {
 
             int imax = 0;
             switch (key.length) {
-                case 128 / 8 -> imax = 0;
+                // case 128 / 8 -> imax = 0;
                 case 192 / 8 -> imax = 2;
                 case 256 / 8 -> imax = 3;
             }
@@ -234,7 +222,7 @@ public class AES implements Cipher {
             byte[] block = new byte[16];
             // take one block
             System.arraycopy(padded_plaintext, block_start_index, block, 0, 16);
-            byte[] round_key = new byte[16];
+            byte[] round_key;
             round_key = encryptGetRoundKey(0);
             block = encryptAddRoundKey(block, round_key);
             // n-1 rounds (R0 - R(n-2)
@@ -263,12 +251,12 @@ public class AES implements Cipher {
     // DECRYPTION:
 
     private byte[] unpad(byte[] padded_data) {
-        System.out.println("Padded data length:"+padded_data.length);
+        System.out.println("Padded data length:" + padded_data.length);
         int pad_length;
         pad_length = padded_data[padded_data.length - 1];
         byte[] unpadded_data = new byte[padded_data.length - pad_length];
         System.arraycopy(padded_data, 0, unpadded_data, 0, unpadded_data.length);
-        System.out.println("Unpadded data length:"+unpadded_data.length);
+        System.out.println("Unpadded data length:" + unpadded_data.length);
         return unpadded_data;
     }
 
@@ -287,7 +275,7 @@ public class AES implements Cipher {
     }
 
     private byte[] decryptMixColumns(byte[] block) {
-        // Mix colums matrix for decryptin be like:
+        // Mix columns matrix for decryption:
         // e b d 9 -  14 11 13  9
         // 9 e b d -   9 14 11 13
         // d 9 e b -  13  9 14 11
@@ -350,7 +338,7 @@ public class AES implements Cipher {
 
     @Override
     public byte[] decryptData(byte[] ciphertext) {
-        System.out.println("Ciphertext length:"+ciphertext.length);
+        System.out.println("Ciphertext length:" + ciphertext.length);
         int round_count;
         switch (key.length) {
             case 128 / 8 -> round_count = 10;
