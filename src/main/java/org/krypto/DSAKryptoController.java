@@ -1,7 +1,5 @@
 package org.krypto;
 
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -25,6 +23,8 @@ import java.util.ResourceBundle;
 
 
 public class DSAKryptoController implements Initializable {
+
+    DSA dsa = new DSA();
 
     @FXML
     private Button key_gen_button;
@@ -85,26 +85,37 @@ public class DSAKryptoController implements Initializable {
     //      - filename.pbl (p,q,h + public key)
     //      - filename.prv (p,q,h + private key)
     // - read key button must read in one file (pub or prv, depending on extension)                                 Done
-
-    // IMPORTANT: DATA IN FILES IS SAVED AS A PLAINTEXT FOR TESTING PURPOSES,
-    // WILL BE REFACTORED AFTER CONSULTATION WITH YOU
-
-    // - to sign: we will use SHA512 of document (if you object, tell me why)
+    // - to sign: we will use SHA512 of document (if you object, tell me why)                                       Done
     // - signature_textarea must display signature in hex
     // - signatures must be readable and savable to .sig files
     // - verify_state_label is used to display state of verification ("Signature matches" or "INVALID SIGNATURE!")
 
+    private void setParamsFromString(String readString, boolean isPrivate){
+        String[] formatedString = readString.split("\n");
+        key_p_text_field.setText(formatedString[0]);
+        key_q_text_field.setText(formatedString[1]);
+        key_h_text_field.setText(formatedString[2]);
+        dsa.setParams(new BigInteger(formatedString[0]),new BigInteger(formatedString[1]), new BigInteger(formatedString[2]));
+        if(isPrivate){
+            key_private_text_field.setText(formatedString[3]);
+            dsa.setPrivateKey(new BigInteger(formatedString[3]));
+        }
+        else{
+            key_public_text_field.setText(formatedString[3]);
+            dsa.setPublicKey(new BigInteger(formatedString[3]));
+        }
 
+    }
     // Initialize all "onClick" type events for UI elements
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        DSA dsa = new DSA();
+
 
         key_gen_button.setOnAction(ActionEvent -> {
                 BigInteger q = BigInteger.probablePrime(160, new SecureRandom());
-                int additional_bits_multipier = ((new SecureRandom().nextInt() & Integer.MAX_VALUE )% 9);
+                int additional_bits_multiplier = ((new SecureRandom().nextInt() & Integer.MAX_VALUE )% 9);
 //                System.out.println("Multiplier: "+additional_bits_multipier);
-                int bitLength = 512 + 64 * additional_bits_multipier;
+                int bitLength = 512 + 64 * additional_bits_multiplier;
                 BigInteger pm1;
                 do {
                     System.out.println("Generating new pm1!");
@@ -148,7 +159,13 @@ public class DSAKryptoController implements Initializable {
                 Alert alert = new Alert(Alert.AlertType.ERROR,
                         "CANNOT SAVE PAIR OF KEYS IF EITHER OF THEM IS EMPTY", ButtonType.OK);
                 alert.show();
-            } else {
+            }else if (key_p_text_field.getText().length()<1
+                    || key_q_text_field.getText().length()<1
+                    || key_h_text_field.getText().length()<1 ){
+                Alert alert = new Alert(Alert.AlertType.ERROR,
+                        "CANNOT SAVE PAIR OF KEYS IF ANY OF PARAMETERS IS EMPTY", ButtonType.OK);
+                alert.show();
+            }else {
                 JFrame parentFrame = new JFrame();
 
                 JFileChooser fileChooser = new JFileChooser("C:\\DSA");
@@ -161,8 +178,6 @@ public class DSAKryptoController implements Initializable {
 
                     String directory =  fileChooser.getCurrentDirectory().getAbsolutePath();
                     String filename = fileChooser.getSelectedFile().getName();
-//                    System.out.println( fileChooser.getCurrentDirectory().getAbsolutePath());
-//                    System.out.println(fileChooser.getSelectedFile().getName());
                     byte[] lineseparator = "\n".getBytes();
                     byte[] p_bytes = key_p_text_field.getText().getBytes();
                     byte[] q_bytes = key_q_text_field.getText().getBytes();
@@ -193,7 +208,8 @@ public class DSAKryptoController implements Initializable {
 
                         }
                         Alert alert = new Alert(Alert.AlertType.INFORMATION,
-                                "KEY FILES SAVED CORRECTLY", ButtonType.OK);
+                                "Private Key saved as file: " + privateKeyFile.getAbsolutePath()+
+                                   "\nPublic Key saved as file: " + publicKeyFile.getAbsolutePath(), ButtonType.OK);
                         alert.show();
                     } catch (IOException e) {
                         Alert alert = new Alert(Alert.AlertType.WARNING,
@@ -202,8 +218,7 @@ public class DSAKryptoController implements Initializable {
                         throw new RuntimeException(e);
 
                     }
-                    System.out.println("Private Key saved as file: " + privateKeyFile.getAbsolutePath());
-                    System.out.println("Public Key saved as file: " + publicKeyFile.getAbsolutePath());
+
                 }
             }
         });
@@ -221,11 +236,7 @@ public class DSAKryptoController implements Initializable {
                     try {
                         byte[] readData = Files.readAllBytes(selectedFile.toPath());
                         String readString = new String(readData);
-                        String[] formatedString = readString.split("\n");
-                        key_p_text_field.setText(formatedString[0]);
-                        key_q_text_field.setText(formatedString[1]);
-                        key_h_text_field.setText(formatedString[2]);
-                        key_private_text_field.setText(formatedString[3]);
+                        setParamsFromString(readString, true);
                         Alert alert = new Alert(Alert.AlertType.INFORMATION,
                                 "PRIVATE KEY FILE LOADED PROPERLY", ButtonType.OK);
                         alert.show();
@@ -238,11 +249,7 @@ public class DSAKryptoController implements Initializable {
                     try {
                         byte[] readData = Files.readAllBytes(selectedFile.toPath());
                         String readString = new String(readData);
-                        String[] formatedString = readString.split("\n");
-                        key_p_text_field.setText(formatedString[0]);
-                        key_q_text_field.setText(formatedString[1]);
-                        key_h_text_field.setText(formatedString[2]);
-                        key_public_text_field.setText(formatedString[3]);
+                        setParamsFromString(readString, false);
                         Alert alert = new Alert(Alert.AlertType.INFORMATION,
                                 "PUBLIC KEY FILE LOADED PROPERLY", ButtonType.OK);
                         alert.show();
@@ -268,7 +275,7 @@ public class DSAKryptoController implements Initializable {
         stage.show();
     }
 
-    public void about(ActionEvent event) {
+    public void about() {
         String about_message = "App made as a university assignment by Jakub Kalinowski and Tomasz Kowalczyk";
         Alert a = new Alert(Alert.AlertType.INFORMATION, about_message, ButtonType.OK);
         a.setTitle("About");
