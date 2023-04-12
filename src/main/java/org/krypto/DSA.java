@@ -57,12 +57,13 @@ public class DSA implements Sign {
         BigInteger upperRange = q.subtract(new BigInteger("1"));
 
         BigInteger r;
+        Signature s = new Signature();
         do {
             r = new BigInteger(upperRange.bitLength(), random);
         } while (r.compareTo(upperRange) > 0 || (r.compareTo(upperRange) < 0 && r.equals(lowerRange)));
         // 2) calculate r' = r^-1 mod q done
         BigInteger r_prime = r.modInverse(q);
-        Signature s = new Signature();
+
         // 3) calculate s1 = (h^r mod p) mod q done
         s.s1 = (h.modPow(r, p)).mod(q);
         // calculate documents hash
@@ -77,9 +78,9 @@ public class DSA implements Sign {
     public boolean verifySignature(byte[] data, Signature s) {
         // T+ODO: add error checking for empty public key / params
         BigInteger zero = new BigInteger("0");
-        if(q.equals(zero) || p.equals(zero) || publicKey.equals(zero) || s == null){
-//            throw new Exception("ONE OF PARAMTERS IS NOT FULLFILED");
-        }
+//        if(q.equals(zero) || p.equals(zero) || publicKey.equals(zero) || s == null){
+////            throw new Exception("ONE OF PARAMTERS IS NOT FULLFILED");
+//        }
         // 1) calculate s' = s2 ^-1 mod q
         BigInteger s_prime = s.s2.modInverse(q);
         // calculate documents hash
@@ -91,7 +92,10 @@ public class DSA implements Sign {
         // 4) calculate t = (h^u1 b^u2 mod p) mod q
         // TODO: this might not be ok (check)
         BigInteger t = ((h.modPow(u1, p).multiply(publicKey.modPow(u2, p))).mod(p)).mod(q);
+//        BigInteger t = s.s1;
         // 5) check signature
+        System.out.println(t);
+        System.out.println(s.s1);
         return t.equals(s.s1);
     }
 }
