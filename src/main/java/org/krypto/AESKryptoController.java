@@ -119,7 +119,7 @@ public class AESKryptoController implements Initializable {
     // Initialize all "onClick" type events for UI elements
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        // TODO: validate user input in key textbox (only hex chars, if too short - pad with 0, if between two lengths - cut or pad)
+
 
         // Generate new key
         key_gen_button.setOnAction(ActionEvent -> {

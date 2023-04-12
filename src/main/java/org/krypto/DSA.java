@@ -29,6 +29,7 @@ public class DSA implements Sign {
         this.h = h;
     }
 
+
     private BigInteger getDocumentHashAsBigInt(byte[] document) {
         BigInteger document_hash;
         try {
@@ -41,20 +42,32 @@ public class DSA implements Sign {
         return document_hash;
     }
 
+
     @Override
     public Signature signData(byte[] data) {
-        // TODO: add error checking for empty private key / params
-        // TODO: generate random r (0 < r <= q-1)
-        // 1) generate random r (0 < r <= q-1)
-        BigInteger r = new BigInteger("0");
-        // 2) calculate r' = r^-1 mod q
+        // T+ODO: add error checking for empty private key / params
+        // T+ODO: generate random r (0 < r <= q-1) +
+        // Seems to be done
+        // 1) generate random r (0 < r <= q-1) done
+        BigInteger lowerRange = new BigInteger("0");
+        SecureRandom random = new SecureRandom();
+        if(q.equals(lowerRange) || p.equals(lowerRange) || h.equals(lowerRange) ||privateKey.equals(lowerRange)){
+//            throw new Exception("ONE OF PARAMTERS IS NOT FULLFILED");
+        }
+        BigInteger upperRange = q.subtract(new BigInteger("1"));
+
+        BigInteger r;
+        do {
+            r = new BigInteger(upperRange.bitLength(), random);
+        } while (r.compareTo(upperRange) > 0 || (r.compareTo(upperRange) < 0 && r.equals(lowerRange)));
+        // 2) calculate r' = r^-1 mod q done
         BigInteger r_prime = r.modInverse(q);
         Signature s = new Signature();
-        // 3) calculate s1 = (h^r mod p) mod q
+        // 3) calculate s1 = (h^r mod p) mod q done
         s.s1 = (h.modPow(r, p)).mod(q);
         // calculate documents hash
         BigInteger document_hash = getDocumentHashAsBigInt(data);
-        // 4) calculate s2 = (r'(SHA512(doc) + as1)) mod q
+        // 4) calculate s2 = (r'(SHA512(doc) + as1)) mod q done
         //      (    r'    *     (      SHA512    +           a   *    s1       )) mod q
         s.s2 = (r_prime.multiply((document_hash.add(privateKey.multiply(s.s1))))).mod(q);
         return s;
@@ -62,7 +75,11 @@ public class DSA implements Sign {
 
     @Override
     public boolean verifySignature(byte[] data, Signature s) {
-        // TODO: add error checking for empty public key / params
+        // T+ODO: add error checking for empty public key / params
+        BigInteger zero = new BigInteger("0");
+        if(q.equals(zero) || p.equals(zero) || publicKey.equals(zero) || s == null){
+//            throw new Exception("ONE OF PARAMTERS IS NOT FULLFILED");
+        }
         // 1) calculate s' = s2 ^-1 mod q
         BigInteger s_prime = s.s2.modInverse(q);
         // calculate documents hash
