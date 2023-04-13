@@ -18,7 +18,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.SecureRandom;
-import java.util.HexFormat;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -49,8 +48,7 @@ public class DSAKryptoController implements Initializable {
 
     @FXML
     private RadioButton radio_file;
-    @FXML
-    private RadioButton radio_text;
+//    private RadioButton radio_text;
 
     @FXML
     private Button read_document_button;
@@ -91,17 +89,6 @@ public class DSAKryptoController implements Initializable {
             case "verify" -> file_indicator_sign.setImage(image);
         }
     }
-    // TODO:
-    // - parameters generation                                                                                      Done
-    // - key generation                                                                                             Done
-    // - save key button must create two files:                                                                     Done
-    //      - filename.pbl (p,q,h + public key)
-    //      - filename.prv (p,q,h + private key)
-    // - read key button must read in one file (pub or prv, depending on extension)                                 Done
-    // - to sign: we will use SHA512 of document (if you object, tell me why)                                       Done
-    // - signature_textarea must display signature in hex
-    // - signatures must be readable and savable to .sig files
-    // - verify_state_label is used to display state of verification ("Signature matches" or "INVALID SIGNATURE!")
 
     private void setParamsFromString(String readString, boolean isPrivate) {
         String[] formatedString = readString.split("\n");
@@ -123,11 +110,10 @@ public class DSAKryptoController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
 
-
         key_gen_button.setOnAction(ActionEvent -> {
             BigInteger q = BigInteger.probablePrime(160, new SecureRandom());
             int additional_bits_multiplier = ((new SecureRandom().nextInt() & Integer.MAX_VALUE) % 9);
-//                System.out.println("Multiplier: "+additional_bits_multipier);
+//                System.out.println("Multiplier: "+additional_bits_multiplier);
             int bitLength = 512 + 64 * additional_bits_multiplier;
             BigInteger pm1;
             do {
@@ -190,7 +176,7 @@ public class DSAKryptoController implements Initializable {
 
                     String directory = fileChooser.getCurrentDirectory().getAbsolutePath();
                     String filename = fileChooser.getSelectedFile().getName();
-                    byte[] lineseparator = "\n".getBytes();
+                    byte[] lineSeparator = "\n".getBytes();
                     byte[] p_bytes = key_p_text_field.getText().getBytes();
                     byte[] q_bytes = key_q_text_field.getText().getBytes();
                     byte[] h_bytes = key_h_text_field.getText().getBytes();
@@ -201,21 +187,21 @@ public class DSAKryptoController implements Initializable {
                     try {
                         try (FileOutputStream outputStream = new FileOutputStream(privateKeyFile)) {
                             outputStream.write(p_bytes);
-                            outputStream.write(lineseparator);
+                            outputStream.write(lineSeparator);
                             outputStream.write(q_bytes);
-                            outputStream.write(lineseparator);
+                            outputStream.write(lineSeparator);
                             outputStream.write(h_bytes);
-                            outputStream.write(lineseparator);
+                            outputStream.write(lineSeparator);
                             outputStream.write(private_key_bytes);
 
                         }
                         try (FileOutputStream outputStream = new FileOutputStream(publicKeyFile)) {
                             outputStream.write(p_bytes);
-                            outputStream.write(lineseparator);
+                            outputStream.write(lineSeparator);
                             outputStream.write(q_bytes);
-                            outputStream.write(lineseparator);
+                            outputStream.write(lineSeparator);
                             outputStream.write(h_bytes);
-                            outputStream.write(lineseparator);
+                            outputStream.write(lineSeparator);
                             outputStream.write(public_key_bytes);
 
                         }
@@ -275,12 +261,15 @@ public class DSAKryptoController implements Initializable {
             }
         });
 
+        // TODO: verify label text handling
         sign.setOnAction(ActionEvent -> {
             Signature s;
             if (radio_file.isSelected()) {
                 // TODO: add file reading & error checking
                 s = dsa.signData(document_file_content);
                 signature_textarea.setText(s.s1.toString() + "\n" + s.s2.toString());
+                setIcon("verify", "checked");
+                setIcon("sig_save", "download");
             } else {
                 if (document_textarea.getText().length() < 1) {
                     Alert alert = new Alert(Alert.AlertType.ERROR,
@@ -290,6 +279,8 @@ public class DSAKryptoController implements Initializable {
                     document_file_content = document_textarea.getText().getBytes(StandardCharsets.UTF_8);
                     s = dsa.signData(document_file_content);
                     signature_textarea.setText(s.s1.toString() + "\n" + s.s2.toString());
+                    setIcon("verify", "checked");
+                    setIcon("sig_save", "download");
                 }
             }
 
@@ -305,11 +296,10 @@ public class DSAKryptoController implements Initializable {
             System.out.println(formattedSignature[1]);
             if (dsa.verifySignature(document_textarea.getText().getBytes(), signature)) {
                 verify_state_label.setText("SIGNATURE MATCHES");
-                setIcon("verify","checked");
-            }
-            else {
+                setIcon("verify", "checked");
+            } else {
                 verify_state_label.setText("SIGNATURE DOES NOT MATCH");
-                setIcon("verify","x");
+                setIcon("verify", "x");
             }
         });
 
@@ -348,6 +338,7 @@ public class DSAKryptoController implements Initializable {
 
                 }
             }
+            setIcon("sig_save", "empty");
         });
 
         read_signature_button.setOnAction(ActionEvent -> {
@@ -367,6 +358,8 @@ public class DSAKryptoController implements Initializable {
                         Alert alert = new Alert(Alert.AlertType.INFORMATION,
                                 "SIGNATURE FILE LOADED PROPERLY", ButtonType.OK);
                         alert.show();
+                        setIcon("sig_read", "upload");
+                        setIcon("verify", "empty");
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -375,9 +368,13 @@ public class DSAKryptoController implements Initializable {
                     Alert alert = new Alert(Alert.AlertType.ERROR,
                             "THIS IS NOT A VALID SIGNATURE FILE (.sig(ma))", ButtonType.OK);
                     alert.show();
+                    setIcon("sig_read", "empty");
+                    setIcon("verify", "empty");
                 }
             }
         });
+
+        // TODO: read_document
     }
 
     public void switchToAES(ActionEvent event) throws IOException {

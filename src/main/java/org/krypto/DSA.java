@@ -45,14 +45,13 @@ public class DSA implements Sign {
 
     @Override
     public Signature signData(byte[] data) {
-        // T+ODO: add error checking for empty private key / params
-        // T+ODO: generate random r (0 < r <= q-1) +
-        // Seems to be done
         // 1) generate random r (0 < r <= q-1) done
         BigInteger lowerRange = new BigInteger("0");
         SecureRandom random = new SecureRandom();
-        if(q.equals(lowerRange) || p.equals(lowerRange) || h.equals(lowerRange) ||privateKey.equals(lowerRange)){
-//            throw new Exception("ONE OF PARAMTERS IS NOT FULLFILED");
+        // TODO: cleanup
+        if (q.equals(lowerRange) || p.equals(lowerRange) || h.equals(lowerRange) || privateKey.equals(lowerRange)) {
+            System.out.println("ERROR: signData: went inside if!");
+            return new Signature();
         }
         BigInteger upperRange = q.subtract(new BigInteger("1"));
 
@@ -76,11 +75,6 @@ public class DSA implements Sign {
 
     @Override
     public boolean verifySignature(byte[] data, Signature s) {
-        // T+ODO: add error checking for empty public key / params
-        BigInteger zero = new BigInteger("0");
-//        if(q.equals(zero) || p.equals(zero) || publicKey.equals(zero) || s == null){
-////            throw new Exception("ONE OF PARAMTERS IS NOT FULLFILED");
-//        }
         // 1) calculate s' = s2 ^-1 mod q
         BigInteger s_prime = s.s2.modInverse(q);
         // calculate documents hash
@@ -92,7 +86,6 @@ public class DSA implements Sign {
         // 4) calculate t = (h^u1 b^u2 mod p) mod q
         // TODO: this might not be ok (check)
         BigInteger t = ((h.modPow(u1, p).multiply(publicKey.modPow(u2, p))).mod(p)).mod(q);
-//        BigInteger t = s.s1;
         // 5) check signature
         System.out.println(t);
         System.out.println(s.s1);
