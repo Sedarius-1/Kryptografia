@@ -45,61 +45,31 @@ public class DSA implements Sign {
 
     @Override
     public Signature signData(byte[] data) {
-        BigInteger h = getDocumentHashAsBigInt(data);
-        SecureRandom random = new SecureRandom();
-        BigInteger k, rp, i, s;
-
-        do {
-            k = new BigInteger(160, random).mod(q.subtract(BigInteger.ONE)).add(BigInteger.ONE);
-
-            rp = h.modPow(k, p).mod(q);
-
-            if (rp.compareTo(BigInteger.ZERO) == 0)
-                continue;
-
-            i = k.modInverse(q);
-            s = i.multiply(h.add(rp.multiply(privateKey))).mod(q);
-
-            if (s.compareTo(BigInteger.ZERO) == 0)
-                continue;
-
-            break;
-        }
-        while (true);
-
-        // Package the digital signature as {r,s}
-        Signature sig = new Signature();
-        sig.s1 = rp;
-        sig.s2 = s;
-        return sig;
-
-
         // 1) generate random r (0 < r <= q-1) done
-        //BigInteger lowerRange = new BigInteger("0");
-        //SecureRandom random = new SecureRandom();
-//        // TODO: cleanup
-//        if (q.equals(lowerRange) || p.equals(lowerRange) || h.equals(lowerRange) || privateKey.equals(lowerRange)) {
-//            System.out.println("ERROR: signData: went inside if!");
-//            return new Signature();
-//        }
-//        BigInteger upperRange = q.subtract(new BigInteger("1"));
-//
-//        BigInteger r;
-//        //Signature s = new Signature();
-//        do {
-//            r = new BigInteger(upperRange.bitLength(), random);
-//        } while (r.compareTo(upperRange) > 0 || (r.compareTo(upperRange) < 0 && r.equals(lowerRange)));
-//        // 2) calculate r' = r^-1 mod q done
-//        BigInteger r_prime = r.modInverse(q);
-//
-//        // 3) calculate s1 = (h^r mod p) mod q done
-//        //s.s1 = (h.modPow(r, p)).mod(q);
-//        // calculate documents hash
-//        //BigInteger document_hash = getDocumentHashAsBigInt(data);
-//        // 4) calculate s2 = (r'(SHA512(doc) + as1)) mod q done
-//        //      (    r'    *     (      SHA512    +           a   *    s1       )) mod q
-//        //s.s2 = (r_prime.multiply((document_hash.add(privateKey.multiply(s.s1))))).mod(q);
-//        //return s;
+        BigInteger lowerRange = new BigInteger("0");
+        SecureRandom random = new SecureRandom();
+        if (q.equals(lowerRange) || p.equals(lowerRange) || h.equals(lowerRange) || privateKey.equals(lowerRange)) {
+            System.out.println("ERROR: signData: went inside if!");
+            return new Signature();
+        }
+        BigInteger upperRange = q.subtract(new BigInteger("1"));
+
+        BigInteger r;
+        Signature s = new Signature();
+        do {
+            r = new BigInteger(upperRange.bitLength(), random);
+        } while (r.compareTo(upperRange) > 0 || (r.compareTo(upperRange) < 0 && r.equals(lowerRange)));
+        // 2) calculate r' = r^-1 mod q done
+        BigInteger r_prime = r.modInverse(q);
+
+        // 3) calculate s1 = (h^r mod p) mod q done
+        s.s1 = (h.modPow(r, p)).mod(q);
+        // calculate documents hash
+        BigInteger document_hash = getDocumentHashAsBigInt(data);
+        // 4) calculate s2 = (r'(SHA512(doc) + as1)) mod q done
+        // s2 =(r '    *     (      SHA512    +           a   *    s1       )) mod q
+        s.s2 = (r_prime.multiply((document_hash.add(privateKey.multiply(s.s1))))).mod(q);
+        return s;
     }
 
     @Override
