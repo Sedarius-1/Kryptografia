@@ -32,7 +32,7 @@ public class DSA implements Sign {
     }
 
     private byte[] getMessageDigest(byte[] data) {
-        MessageDigest messageDigest = null;
+        MessageDigest messageDigest;
         try {
             messageDigest = MessageDigest.getInstance("SHA-512");
         } catch (NoSuchAlgorithmException e) {
@@ -40,43 +40,42 @@ public class DSA implements Sign {
         }
         return messageDigest.digest(data);
     }
-    public List<List<BigInteger>> generateKeys() throws NoSuchAlgorithmException {
+
+    public List<List<BigInteger>> generateKeys() {
         SecureRandom random = new SecureRandom();
 
         BigInteger hPre;
         int bitLength;
         q = BigInteger.probablePrime(160, random);
         bitLength = 512 + random.nextInt(9) * 64;
-        do
-        {
+        do {
             p = BigInteger.probablePrime(bitLength, random);
             p = p.subtract(p.subtract(BigInteger.ONE).remainder(q));
         }
         while (!(p.isProbablePrime(4)));
         BigInteger pMinusOneDivQ = p.subtract(BigInteger.ONE).divide(q);
-        do
-        {
+        do {
             hPre = new BigInteger(bitLength, random).mod(p.subtract(BigInteger.valueOf(3))).add(BigInteger.TWO);
             h = hPre.mod(p).modPow(pMinusOneDivQ, p);
         }
-        while (!(h.compareTo(BigInteger.ONE) == 1 && h.compareTo(p) == -1 && h.mod(p).modPow(q, p).compareTo(BigInteger.ONE) == 0));
+        while (!(h.compareTo(BigInteger.ONE) > 0 && h.compareTo(p) < 0 && h.mod(p).modPow(q, p).compareTo(BigInteger.ONE) == 0));
 
-    privateKey = new BigInteger(160, random).mod(q.subtract(BigInteger.ONE)).add(BigInteger.ONE);
-    publicKey = h.mod(p).modPow(privateKey, p);
-    List<BigInteger> privateKeyList  = new ArrayList<>();
-    List<BigInteger> publicKeyList  = new ArrayList<>();
-    privateKeyList.add(p);
-    privateKeyList.add(q);
-    privateKeyList.add(h);
-    privateKeyList.add(this.privateKey);
-    publicKeyList.add(p);
-    publicKeyList.add(q);
-    publicKeyList.add(h);
-    publicKeyList.add(this.publicKey);
-    List<List<BigInteger>> keyList = new ArrayList<>(2);
-    keyList.add(privateKeyList);
-    keyList.add(publicKeyList);
-    return keyList;
+        privateKey = new BigInteger(160, random).mod(q.subtract(BigInteger.ONE)).add(BigInteger.ONE);
+        publicKey = h.mod(p).modPow(privateKey, p);
+        List<BigInteger> privateKeyList = new ArrayList<>();
+        List<BigInteger> publicKeyList = new ArrayList<>();
+        privateKeyList.add(p);
+        privateKeyList.add(q);
+        privateKeyList.add(h);
+        privateKeyList.add(this.privateKey);
+        publicKeyList.add(p);
+        publicKeyList.add(q);
+        publicKeyList.add(h);
+        publicKeyList.add(this.publicKey);
+        List<List<BigInteger>> keyList = new ArrayList<>(2);
+        keyList.add(privateKeyList);
+        keyList.add(publicKeyList);
+        return keyList;
     }
 
     @Override
@@ -85,8 +84,7 @@ public class DSA implements Sign {
         BigInteger hash;
         BigInteger k, r, i, s;
         hash = new BigInteger(1, getMessageDigest(data));
-        do
-        {
+        do {
             k = new BigInteger(160, random).mod(q.subtract(BigInteger.ONE)).add(BigInteger.ONE);
 
             r = h.modPow(k, p).mod(q);
@@ -113,7 +111,6 @@ public class DSA implements Sign {
 
     @Override
     public boolean verifySignature(byte[] data, Signature signature) {
-
         BigInteger sPrime, u1, u2, t;
         BigInteger hash = new BigInteger(1, getMessageDigest(data));
 

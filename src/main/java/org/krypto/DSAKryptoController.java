@@ -19,7 +19,6 @@ import java.math.BigInteger;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -109,42 +108,7 @@ public class DSAKryptoController implements Initializable {
             key_public_text_field.setText(formatedString[3]);
             dsa.setPublicKey(new BigInteger(formatedString[3]));
         }
-
     }
-
-//    public void generateKey()
-//    {   //tworzymy losową liczbę bitów dla p
-//        BigInteger p,q,h,g,x,y,pm1;
-//        MessageDigest digest;
-//        int keyLen=512; //ta wartość daje długość p=512
-//        int ilZnHex=keyLen/4;//ilość znaków hex wyświetlanych w polu klucza
-//        Random random=new Random();
-//        int rand=512+(int)random.nextFloat()*512;
-//        //następnie musimy ją dobić tak aby była wielokrotnością 64
-//        while (true)
-//            if (rand%64==0) break;
-//            else rand++;
-//        keyLen=rand;
-//        q=BigInteger.probablePrime(160,new Random());
-//        BigInteger pom1, pom2;
-//        do
-//        {
-//            pom1 = BigInteger.probablePrime(keyLen,new Random());
-//            pom2 = pom1.subtract(BigInteger.ONE);
-//            pom1 = pom1.subtract(pom2.remainder(q));
-//        } while (!pom1.isProbablePrime(2));
-//        p=pom1;
-//        pm1=p.subtract(BigInteger.ONE);
-//        h=new BigInteger(keyLen-2,random);
-//        while(true)
-//            if (h.modPow(pm1.divide(q),p).compareTo(BigInteger.ONE)==1)break;
-//            else h=new BigInteger(keyLen-2,random);
-//        g=h.modPow(pm1.divide(q),p);
-//        do
-//            x=new BigInteger(160-2,random);
-//        while (x.compareTo(BigInteger.ZERO) != 1);
-//        y=g.modPow(x,p);
-//    }
 
     // Initialize all "onClick" type events for UI elements
     @Override
@@ -152,11 +116,7 @@ public class DSAKryptoController implements Initializable {
 
         key_gen_button.setOnAction(ActionEvent -> {
             List<List<BigInteger>> keyList;
-            try {
-                keyList = dsa.generateKeys();
-            } catch (NoSuchAlgorithmException e) {
-                throw new RuntimeException(e);
-            }
+            keyList = dsa.generateKeys();
             key_p_text_field.setText(keyList.get(0).get(0).toString());
             key_q_text_field.setText(keyList.get(0).get(1).toString());
             key_h_text_field.setText(keyList.get(0).get(2).toString());
@@ -273,15 +233,45 @@ public class DSAKryptoController implements Initializable {
             }
         });
 
-        // TODO: verify label text handling
+        read_document_button.setOnAction(ActionEvent -> {
+            JFrame parentFrame = new JFrame();
+
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Specify a file to load");
+
+            int userSelection = fileChooser.showOpenDialog(parentFrame);
+            if (userSelection == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = fileChooser.getSelectedFile();
+                try {
+                    document_file_content = Files.readAllBytes(selectedFile.toPath());
+                    document_textarea.setText("Loaded document from file " + selectedFile);
+                    setIcon("doc_read", "upload");
+                    setIcon("sign_read", "empty");
+                    setIcon("sign_save", "empty");
+                    setIcon("verify", "empty");
+                    verify_state_label.setText("");
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION,
+                            "FILE LOADED PROPERLY", ButtonType.OK);
+                    alert.show();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+
         sign.setOnAction(ActionEvent -> {
             Signature s;
             if (radio_file.isSelected()) {
-                // TODO: add file reading & error checking
-                s = dsa.signData(document_file_content);
-                signature_textarea.setText(s.s1.toString() + "\n" + s.s2.toString());
-                setIcon("verify", "checked");
-                setIcon("sig_save", "download");
+                if (document_file_content.length < 1) {
+                    Alert alert = new Alert(Alert.AlertType.ERROR,
+                            "CANNOT SIGN EMPTY DOCUMENT", ButtonType.OK);
+                    alert.show();
+                } else {
+                    s = dsa.signData(document_file_content);
+                    signature_textarea.setText(s.s1.toString() + "\n" + s.s2.toString());
+                    setIcon("verify", "checked");
+                    setIcon("sig_save", "download");
+                }
             } else {
                 if (document_textarea.getText().length() < 1) {
                     Alert alert = new Alert(Alert.AlertType.ERROR,
@@ -300,13 +290,24 @@ public class DSAKryptoController implements Initializable {
         });
 
         verify.setOnAction(ActionEvent -> {
+            if (!radio_file.isSelected()) {
+                // take text from textarea
+                document_file_content = document_textarea.getText().getBytes(StandardCharsets.UTF_8);
+                if (document_file_content.length < 1) {
+                    Alert alert = new Alert(Alert.AlertType.ERROR,
+                            "CANNOT VERIFY SIGNATURE OF EMPTY DOCUMENT", ButtonType.OK);
+                    alert.show();
+                }
+            }
             String[] formattedSignature = signature_textarea.getText().split("\n");
             Signature signature = new Signature();
+            if (formattedSignature.length != 2) {
+                Alert alert = new Alert(Alert.AlertType.ERROR,
+                        "INVALID SIGNATURE!", ButtonType.OK);
+                alert.show();
+            }
             signature.s1 = new BigInteger(formattedSignature[0]);
             signature.s2 = new BigInteger(formattedSignature[1]);
-            System.out.println("TEXT:"+document_textarea.getText());
-            System.out.println("Sign1:"+formattedSignature[0]);
-            System.out.println("Sign2:"+formattedSignature[1]);
             if (dsa.verifySignature(document_file_content, signature)) {
                 verify_state_label.setText("SIGNATURE MATCHES");
                 setIcon("verify", "checked");
