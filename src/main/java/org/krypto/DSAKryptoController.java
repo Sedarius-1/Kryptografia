@@ -12,12 +12,15 @@ import javafx.stage.Stage;
 import org.apache.commons.io.FilenameUtils;
 
 import javax.swing.*;
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.security.SecureRandom;
+import java.security.NoSuchAlgorithmException;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -79,6 +82,9 @@ public class DSAKryptoController implements Initializable {
     @FXML
     private Label verify_state_label;
 
+    public DSAKryptoController() {
+    }
+
     private void setIcon(String place, String icon) {
         File file = new File("src/main/resources/org.krypto/file_" + icon + ".png");
         Image image = new Image(file.toURI().toString());
@@ -106,50 +112,56 @@ public class DSAKryptoController implements Initializable {
 
     }
 
+//    public void generateKey()
+//    {   //tworzymy losową liczbę bitów dla p
+//        BigInteger p,q,h,g,x,y,pm1;
+//        MessageDigest digest;
+//        int keyLen=512; //ta wartość daje długość p=512
+//        int ilZnHex=keyLen/4;//ilość znaków hex wyświetlanych w polu klucza
+//        Random random=new Random();
+//        int rand=512+(int)random.nextFloat()*512;
+//        //następnie musimy ją dobić tak aby była wielokrotnością 64
+//        while (true)
+//            if (rand%64==0) break;
+//            else rand++;
+//        keyLen=rand;
+//        q=BigInteger.probablePrime(160,new Random());
+//        BigInteger pom1, pom2;
+//        do
+//        {
+//            pom1 = BigInteger.probablePrime(keyLen,new Random());
+//            pom2 = pom1.subtract(BigInteger.ONE);
+//            pom1 = pom1.subtract(pom2.remainder(q));
+//        } while (!pom1.isProbablePrime(2));
+//        p=pom1;
+//        pm1=p.subtract(BigInteger.ONE);
+//        h=new BigInteger(keyLen-2,random);
+//        while(true)
+//            if (h.modPow(pm1.divide(q),p).compareTo(BigInteger.ONE)==1)break;
+//            else h=new BigInteger(keyLen-2,random);
+//        g=h.modPow(pm1.divide(q),p);
+//        do
+//            x=new BigInteger(160-2,random);
+//        while (x.compareTo(BigInteger.ZERO) != 1);
+//        y=g.modPow(x,p);
+//    }
+
     // Initialize all "onClick" type events for UI elements
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
 
         key_gen_button.setOnAction(ActionEvent -> {
-            BigInteger q = BigInteger.probablePrime(160, new SecureRandom());
-            int additional_bits_multiplier = ((new SecureRandom().nextInt() & Integer.MAX_VALUE) % 9);
-//                System.out.println("Multiplier: "+additional_bits_multiplier);
-            int bitLength = 512 + 64 * additional_bits_multiplier;
-            BigInteger pm1;
-            do {
-                System.out.println("Generating new pm1!");
-                BigInteger pMul = new BigInteger(bitLength - 160, new SecureRandom());
-                pm1 = q.multiply(pMul);
-                System.out.println("Bit length: " + pm1.bitLength());
-                System.out.println("Division result: " + pm1.mod(q));
-            } while (pm1.bitLength() != bitLength);
-            BigInteger p = pm1.add(BigInteger.valueOf(1));
-//                System.out.println("Q: "+q);
-            BigInteger h;
-            do {
-                h = new BigInteger(160, new SecureRandom());
-
-            } while (h.equals(BigInteger.valueOf(0)) || h.compareTo(pm1) > 0 || h.toString().length() != q.toString().length());
-
-
-            dsa.setParams(p, q, h);
-
-            BigInteger privateKey;
-            do {
-                privateKey = new BigInteger(160, new SecureRandom());
-
-            } while (privateKey.equals(BigInteger.valueOf(1)) || privateKey.compareTo(q) >= 0);
-
-            BigInteger publicKey = h.modPow(privateKey, p);
-
-            dsa.setPrivateKey(privateKey);
-            dsa.setPublicKey(publicKey);
-
-            key_p_text_field.setText(p.toString());
-            key_q_text_field.setText(q.toString());
-            key_h_text_field.setText(h.toString());
-            key_private_text_field.setText(privateKey.toString());
-            key_public_text_field.setText(publicKey.toString());
+            List<List<BigInteger>> keyList;
+            try {
+                keyList = dsa.generateKeys();
+            } catch (NoSuchAlgorithmException e) {
+                throw new RuntimeException(e);
+            }
+            key_p_text_field.setText(keyList.get(0).get(0).toString());
+            key_q_text_field.setText(keyList.get(0).get(1).toString());
+            key_h_text_field.setText(keyList.get(0).get(2).toString());
+            key_private_text_field.setText(keyList.get(0).get(3).toString());
+            key_public_text_field.setText(keyList.get(1).get(3).toString());
         });
 
         key_save_button.setOnAction(ActionEvent -> {
@@ -292,9 +304,10 @@ public class DSAKryptoController implements Initializable {
             Signature signature = new Signature();
             signature.s1 = new BigInteger(formattedSignature[0]);
             signature.s2 = new BigInteger(formattedSignature[1]);
-            System.out.println(formattedSignature[0]);
-            System.out.println(formattedSignature[1]);
-            if (dsa.verifySignature(document_textarea.getText().getBytes(), signature)) {
+            System.out.println("TEXT:"+document_textarea.getText());
+            System.out.println("Sign1:"+formattedSignature[0]);
+            System.out.println("Sign2:"+formattedSignature[1]);
+            if (dsa.verifySignature(document_file_content, signature)) {
                 verify_state_label.setText("SIGNATURE MATCHES");
                 setIcon("verify", "checked");
             } else {

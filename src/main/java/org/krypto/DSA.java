@@ -4,6 +4,8 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DSA implements Sign {
     private BigInteger p;
@@ -29,65 +31,100 @@ public class DSA implements Sign {
         this.h = h;
     }
 
-
-    private BigInteger getDocumentHashAsBigInt(byte[] document) {
-        BigInteger document_hash;
+    private byte[] getMessageDigest(byte[] data) {
+        MessageDigest messageDigest = null;
         try {
-            MessageDigest md = MessageDigest.getInstance("SHA-512");
-            byte[] hash = md.digest(document);
-            document_hash = new BigInteger(hash);
+            messageDigest = MessageDigest.getInstance("SHA-512");
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
-        return document_hash;
+        return messageDigest.digest(data);
     }
+    public List<List<BigInteger>> generateKeys() throws NoSuchAlgorithmException {
+        SecureRandom random = new SecureRandom();
 
+        BigInteger hPre;
+        int bitLength;
+        q = BigInteger.probablePrime(160, random);
+        bitLength = 512 + random.nextInt(9) * 64;
+        do
+        {
+            p = BigInteger.probablePrime(bitLength, random);
+            p = p.subtract(p.subtract(BigInteger.ONE).remainder(q));
+        }
+        while (!(p.isProbablePrime(4)));
+        BigInteger pMinusOneDivQ = p.subtract(BigInteger.ONE).divide(q);
+        do
+        {
+            hPre = new BigInteger(bitLength, random).mod(p.subtract(BigInteger.valueOf(3))).add(BigInteger.TWO);
+            h = hPre.mod(p).modPow(pMinusOneDivQ, p);
+        }
+        while (!(h.compareTo(BigInteger.ONE) == 1 && h.compareTo(p) == -1 && h.mod(p).modPow(q, p).compareTo(BigInteger.ONE) == 0));
+
+    privateKey = new BigInteger(160, random).mod(q.subtract(BigInteger.ONE)).add(BigInteger.ONE);
+    publicKey = h.mod(p).modPow(privateKey, p);
+    List<BigInteger> privateKeyList  = new ArrayList<>();
+    List<BigInteger> publicKeyList  = new ArrayList<>();
+    privateKeyList.add(p);
+    privateKeyList.add(q);
+    privateKeyList.add(h);
+    privateKeyList.add(this.privateKey);
+    publicKeyList.add(p);
+    publicKeyList.add(q);
+    publicKeyList.add(h);
+    publicKeyList.add(this.publicKey);
+    List<List<BigInteger>> keyList = new ArrayList<>(2);
+    keyList.add(privateKeyList);
+    keyList.add(publicKeyList);
+    return keyList;
+    }
 
     @Override
     public Signature signData(byte[] data) {
-        // 1) generate random r (0 < r <= q-1) done
-        BigInteger lowerRange = new BigInteger("0");
         SecureRandom random = new SecureRandom();
-        if (q.equals(lowerRange) || p.equals(lowerRange) || h.equals(lowerRange) || privateKey.equals(lowerRange)) {
-            System.out.println("ERROR: signData: went inside if!");
-            return new Signature();
+        BigInteger hash;
+        BigInteger k, r, i, s;
+        hash = new BigInteger(1, getMessageDigest(data));
+        do
+        {
+            k = new BigInteger(160, random).mod(q.subtract(BigInteger.ONE)).add(BigInteger.ONE);
+
+            r = h.modPow(k, p).mod(q);
+
+            if (r.compareTo(BigInteger.ZERO) == 0)
+                continue;
+
+            i = k.modInverse(q);
+            s = i.multiply(hash.add(r.multiply(privateKey))).mod(q);
+
+            if (s.compareTo(BigInteger.ZERO) == 0)
+                continue;
+
+            break;
         }
-        BigInteger upperRange = q.subtract(new BigInteger("1"));
+        while (true);
 
-        BigInteger r;
-        Signature s = new Signature();
-        do {
-            r = new BigInteger(upperRange.bitLength(), random);
-        } while (r.compareTo(upperRange) > 0 || (r.compareTo(upperRange) < 0 && r.equals(lowerRange)));
-        // 2) calculate r' = r^-1 mod q done
-        BigInteger r_prime = r.modInverse(q);
+        Signature signature = new Signature();
+        signature.s1 = r;
+        signature.s2 = s;
 
-        // 3) calculate s1 = (h^r mod p) mod q done
-        s.s1 = (h.modPow(r, p)).mod(q);
-        // calculate documents hash
-        BigInteger document_hash = getDocumentHashAsBigInt(data);
-        // 4) calculate s2 = (r'(SHA512(doc) + as1)) mod q done
-        // s2 =(r '    *     (      SHA512    +           a   *    s1       )) mod q
-        s.s2 = (r_prime.multiply((document_hash.add(privateKey.multiply(s.s1))))).mod(q);
-        return s;
+        return signature;
     }
 
     @Override
-    public boolean verifySignature(byte[] data, Signature s) {
-        // 1) calculate s' = s2 ^-1 mod q
-        BigInteger s_prime = s.s2.modInverse(q);
-        // calculate documents hash
-        BigInteger document_hash = getDocumentHashAsBigInt(data);
-        // 2) calculate u1 = (SHA512(doc) s') mod q
-        BigInteger u1 = (document_hash.multiply(s_prime)).mod(q);
-        // 3) calculate u2 = (s' s1) mod q
-        BigInteger u2 = (s_prime.multiply(s.s1)).mod(q);
-        // 4) calculate t = (h^u1 b^u2 mod p) mod q
-        // TODO: this might not be ok (check)
-        BigInteger t = ((h.modPow(u1, p).multiply(publicKey.modPow(u2, p))).mod(p)).mod(q);
-        // 5) check signature
-        System.out.println(t);
-        System.out.println(s.s1);
-        return t.equals(s.s1);
+    public boolean verifySignature(byte[] data, Signature signature) {
+
+        BigInteger sPrime, u1, u2, t;
+        BigInteger hash = new BigInteger(1, getMessageDigest(data));
+
+        sPrime = signature.s2.modInverse(q);
+
+        u1 = hash.multiply(sPrime).mod(q);
+
+        u2 = signature.s1.multiply(sPrime).mod(q);
+
+        t = h.mod(p).modPow(u1, p).multiply(publicKey.mod(p).modPow(u2, p)).mod(p).mod(q);
+
+        return t.equals(signature.s1);
     }
 }
